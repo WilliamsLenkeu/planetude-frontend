@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FF77A9;
+  --color-primary-100: #FFC0CB;
+  --color-accent: #FFF3B0;
+  --color-bg: #FFF0E6;
+  --color-lilac: #CDA4FF;
+  --color-text: #333333;
+
+  --radius-kawaii-sm: 8px;
+  --radius-kawaii-lg: 24px;
+
+  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.06);
+
+  --font-sans: "Poppins", sans-serif;
+  --font-decorative: "Baloo 2", cursive;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-decorative);
+    font-weight: bold;
+  }
+}
+
+.kawaii-card {
+  background-color: white;
+  border-radius: var(--radius-kawaii-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem;
+  border: 2px solid var(--color-primary-100);
+}
+
+.kawaii-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: bold;
+  transition: all 0.2s;
+  text-align: center;
+  cursor: pointer;
+}
+
+.kawaii-button:active {
+  transform: scale(0.95);
+}
+
+.kawaii-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kawaii-button-primary {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.kawaii-button-accent {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.kawaii-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-kawaii-sm);
+  border: 2px solid var(--color-primary-100);
+  outline: none;
+  transition: colors 0.2s;
+  background-color: rgb(255 255 255 / 0.5);
+}
+
+.kawaii-input:focus {
+  border-color: var(--color-primary);
+  background-color: white;
+}
