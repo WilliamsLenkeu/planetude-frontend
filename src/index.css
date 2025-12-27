@@ -1,93 +1,166 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Satisfy&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-primary: #FF77A9;
-  --color-primary-100: #FFC0CB;
+  --color-primary-light: #FFC0CB;
+  --color-primary-dark: #E65A8E;
   --color-accent: #FFF3B0;
   --color-bg: #FFF0E6;
   --color-lilac: #CDA4FF;
-  --color-text: #333333;
+  --color-text: #444444;
+  --color-white: #FFFFFF;
 
-  --radius-kawaii-sm: 8px;
-  --radius-kawaii-lg: 24px;
+  --radius-kawaii-sm: 12px;
+  --radius-kawaii-md: 20px;
+  --radius-kawaii-lg: 32px;
+  --radius-cloud: 50% 50% 50% 50% / 60% 60% 40% 40%;
 
-  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.06);
+  --shadow-kawaii: 0 10px 25px -5px rgba(255, 119, 169, 0.2), 0 8px 10px -6px rgba(255, 119, 169, 0.1);
+  --shadow-inner-soft: inset 0 2px 4px 0 rgba(255, 255, 255, 0.5);
 
   --font-sans: "Poppins", sans-serif;
   --font-decorative: "Baloo 2", cursive;
+  --font-satisfy: "Satisfy", cursive;
 }
 
 @layer base {
   body {
     background-color: var(--color-bg);
+    background-image: radial-gradient(var(--color-primary-light) 1px, transparent 1px);
+    background-size: 30px 30px;
     color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     margin: 0;
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   h1,
   h2,
   h3,
-  h4,
-  h5,
-  h6 {
+  h4 {
     font-family: var(--font-decorative);
-    font-weight: bold;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 }
 
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 .kawaii-card {
-  background-color: white;
+  background-color: var(--color-white);
   border-radius: var(--radius-kawaii-lg);
-  box-shadow: var(--shadow-soft);
-  padding: 1.5rem;
-  border: 2px solid var(--color-primary-100);
+  box-shadow: var(--shadow-kawaii);
+  padding: 2rem;
+  border: 3px solid var(--color-primary-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.kawaii-card::before {
+  content: "❤";
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  color: var(--color-primary-light);
+  font-size: 1.2rem;
+  opacity: 0.5;
 }
 
 .kawaii-button {
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   border-radius: 9999px;
-  font-weight: bold;
-  transition: all 0.2s;
+  font-weight: 800;
+  font-family: var(--font-decorative);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-align: center;
   cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.kawaii-button:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 20px -5px rgba(255, 119, 169, 0.4);
 }
 
 .kawaii-button:active {
   transform: scale(0.95);
 }
 
-.kawaii-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .kawaii-button-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .kawaii-button-accent {
-  background-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #FFF9D0 100%);
   color: var(--color-text);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border: 2px solid var(--color-primary-light);
 }
 
 .kawaii-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-kawaii-sm);
-  border: 2px solid var(--color-primary-100);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-kawaii-md);
+  border: 3px solid var(--color-primary-light);
   outline: none;
-  transition: colors 0.2s;
-  background-color: rgb(255 255 255 / 0.5);
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
 }
 
 .kawaii-input:focus {
   border-color: var(--color-primary);
   background-color: white;
+  box-shadow: 0 0 0 4px rgba(255, 119, 169, 0.1);
+}
+
+/* Animations custom */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    scale: 0;
+  }
+
+  50% {
+    opacity: 1;
+    scale: 1.2;
+  }
+}
+
+.sparkle-effect {
+  position: absolute;
+  pointer-events: none;
+  animation: sparkle 2s ease-in-out infinite;
 }

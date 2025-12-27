@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import api from '../lib/api';
-import Card from '../components/Card';
-import FormInput from '../components/FormInput';
-import { Plus, Trash2, Calendar, FileText, Download } from 'lucide-react';
+import { BouncyCard, Heart } from '../components/AestheticComponents';
+import { Calendar, Plus, Trash2, FileText, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Planning: React.FC = () => {
   const [plannings, setPlannings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-
-  // New Planning Form State
-  const [periode, setPeriode] = useState('semaine');
-  const [dateDebut, setDateDebut] = useState('');
-  const [matiere, setMatiere] = useState('');
-
-  useEffect(() => {
-    fetchPlannings();
-  }, []);
+  const [newPlan, setNewPlan] = useState({
+    dateDebut: new Date().toISOString().split('T')[0],
+    heuresParJour: 2,
+    matieres: ''
+  });
 
   const fetchPlannings = async () => {
     try {
@@ -29,128 +26,179 @@ const Planning: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchPlannings();
+  }, []);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api('/api/planning', {
+      await api('/api/planning/generate', {
         method: 'POST',
         body: JSON.stringify({
-          periode,
-          dateDebut,
-          sessions: [{ matiere, debut: `${dateDebut}T09:00:00`, fin: `${dateDebut}T10:30:00` }]
+          ...newPlan,
+          matieres: newPlan.matieres.split(',').map(m => m.trim())
         })
       });
       setShowForm(false);
       fetchPlannings();
     } catch (err) {
-      alert('Erreur lors de la création 🌸');
+      alert('Erreur lors de la création du planning 🌸');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Veux-tu vraiment supprimer ce planning ? 😢')) return;
+    if (!confirm('Voulez-tu vraiment supprimer ce petit planning ? 🎀')) return;
     try {
       await api(`/api/planning/${id}`, { method: 'DELETE' });
       fetchPlannings();
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      console.error(err);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl text-primary font-decorative font-bold">Mes Plannings</h2>
-        <button
+    <div className="space-y-8">
+      <header className="flex justify-between items-end">
+        <div>
+          <h2 className="text-3xl text-primary font-satisfy">Mes Plannings</h2>
+          <p className="text-xs text-primary-dark font-extrabold uppercase tracking-widest italic">Organise tes rêves ✨</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setShowForm(!showForm)}
-          className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md animate-pulse"
+          className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-kawaii border-2 border-white"
         >
-          <Plus size={24} />
-        </button>
-      </div>
+          {showForm ? <Trash2 size={24} className="rotate-45" /> : <Plus size={28} />}
+        </motion.button>
+      </header>
 
-      {showForm && (
-        <Card title="Nouveau Planning ✨" className="animate-in slide-in-from-top duration-300">
-          <form onSubmit={handleCreate}>
-            <FormInput
-              label="Date de début"
-              type="date"
-              value={dateDebut}
-              onChange={(e) => setDateDebut(e.target.value)}
-              required
-            />
-            <FormInput
-              label="Matière principale"
-              placeholder="Ex: Mathématiques"
-              value={matiere}
-              onChange={(e) => setMatiere(e.target.value)}
-              required
-            />
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text mb-1 ml-2">Période</label>
-              <select
-                className="kawaii-input"
-                value={periode}
-                onChange={(e) => setPeriode(e.target.value)}
-              >
-                <option value="semaine">Semaine</option>
-                <option value="mois">Mois</option>
-              </select>
-            </div>
-            <button type="submit" className="kawaii-button kawaii-button-primary w-full">
-              Créer mon planning 🎀
-            </button>
-          </form>
-        </Card>
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, scale: 0.9 }}
+            animate={{ opacity: 1, height: 'auto', scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.9 }}
+            className="overflow-hidden"
+          >
+            <BouncyCard className="bg-gradient-to-br from-primary-light/20 to-white border-dashed">
+              <h3 className="text-xl text-primary mb-6 flex items-center gap-2">
+                Nouveau Planning <Heart />
+              </h3>
+              <form onSubmit={handleCreate} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Date de début</label>
+                  <input
+                    type="date"
+                    className="kawaii-input"
+                    value={newPlan.dateDebut}
+                    onChange={(e) => setNewPlan({ ...newPlan, dateDebut: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Heures par jour</label>
+                  <input
+                    type="number"
+                    className="kawaii-input"
+                    value={newPlan.heuresParJour}
+                    onChange={(e) => setNewPlan({ ...newPlan, heuresParJour: parseInt(e.target.value) })}
+                    min="1" max="12"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Matières (séparées par des virgules)</label>
+                  <textarea
+                    className="kawaii-input min-h-[100px]"
+                    placeholder="Maths, Anglais, Code... 🌸"
+                    value={newPlan.matieres}
+                    onChange={(e) => setNewPlan({ ...newPlan, matieres: e.target.value })}
+                    required
+                  ></textarea>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="w-full kawaii-button kawaii-button-primary py-4 text-lg"
+                >
+                  Générer ma Magie 🪄
+                </motion.button>
+              </form>
+            </BouncyCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {loading ? (
-        <p className="text-center text-primary italic">Recherche de tes trésors... ✨</p>
-      ) : plannings.length > 0 ? (
-        <div className="grid gap-4">
-          {plannings.map((p) => (
-            <Card key={p._id} className="relative group">
+      <div className="grid gap-6">
+        {loading ? (
+          <div className="p-12 text-center text-primary-dark font-medium animate-pulse italic">
+            Chargement de tes secrets... 🍭
+          </div>
+        ) : plannings.length > 0 ? (
+          plannings.map((p, i) => (
+            <BouncyCard key={p._id} delay={i * 0.1} className="group hover:border-primary transition-colors">
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary-100 rounded-kawaii-sm text-primary">
-                    <Calendar size={20} />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-accent/30 rounded-full flex items-center justify-center text-2xl shadow-inner border-2 border-white">
+                    📅
                   </div>
                   <div>
-                    <p className="font-bold text-lg">{p.periode === 'semaine' ? '📅 Semaine du ' : '📅 Mois du '} {new Date(p.dateDebut).toLocaleDateString()}</p>
-                    <p className="text-sm text-gray-500">{p.sessions?.length || 0} sessions prévues</p>
+                    <h4 className="text-lg text-text">Planning du {new Date(p.dateDebut).toLocaleDateString()}</h4>
+                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">
+                      {p.sessions?.length || 0} Sessions • {p.matieres?.join(', ')}
+                    </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleDelete(p._id)} className="p-2 text-gray-300 hover:text-red-400 transition-colors">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <a
-                  href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/planning/${p._id}/export.ical?token=${localStorage.getItem('token')}`}
-                  className="flex-1 kawaii-button kawaii-button-accent py-2 text-sm flex items-center justify-center gap-2"
+                <button
+                  onClick={() => handleDelete(p._id)}
+                  className="text-gray-300 hover:text-red-400 transition-colors p-2"
                 >
-                  <Download size={16} /> iCal
+                  <Trash2 size={18} />
+                </button>
+              </div>
+
+              <div className="mt-8 flex gap-3 flex-wrap">
+                <Link to={`/planning/${p._id}`} className="kawaii-button kawaii-button-accent text-xs py-2 px-4 flex-1">
+                  Détails <Sparkles size={12} />
+                </Link>
+                <a
+                  href={`https://plan-etude.koyeb.app/api/planning/${p._id}/export/ical`}
+                  className="kawaii-button bg-lilac/30 text-lilac-dark text-xs py-2 px-4 hover:bg-lilac/50 transition-colors"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  iCal <Calendar size={12} />
                 </a>
                 <a
-                  href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/planning/${p._id}/export.pdf?token=${localStorage.getItem('token')}`}
-                  className="flex-1 border-2 border-primary-100 text-primary py-2 rounded-full text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary-100"
+                  href={`https://plan-etude.koyeb.app/api/planning/${p._id}/export/pdf`}
+                  className="kawaii-button bg-gray-100 text-gray-500 text-xs py-2 px-4 hover:bg-gray-200"
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  <FileText size={16} /> PDF
+                  PDF <FileText size={12} />
                 </a>
               </div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-400 mb-4">Tu n'as pas encore de planning... 🌸</p>
-          <button onClick={() => setShowForm(true)} className="text-primary font-bold underline decoration-accent decoration-4">
-            Crée ton premier planning maintenant !
-          </button>
-        </div>
-      )}
+            </BouncyCard>
+          ))
+        ) : (
+          <div className="text-center py-20 bg-white/30 rounded-3xl border-3 border-dashed border-primary-light">
+            <motion.span
+              animate={{ scale: [1, 1.5, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+              className="text-6xl block mb-4"
+            >
+              🍥
+            </motion.span>
+            <p className="text-primary-dark font-medium italic">Aucun planning pour le moment...</p>
+            <button onClick={() => setShowForm(true)} className="text-primary font-bold underline mt-2 text-sm">
+              Crée ton premier planning ici ! 🌸
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
