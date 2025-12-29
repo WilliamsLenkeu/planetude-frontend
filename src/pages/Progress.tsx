@@ -1,123 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import api from '../lib/api';
-import { BouncyCard, Sparkle } from '../components/AestheticComponents';
-import { Trophy, Clock, Star, Award } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { Trophy, Star, Target, Heart } from 'lucide-react'
+import { userService } from '../services/user.service'
+import type { Badge, Stats } from '../types/index'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { StatCard } from '../components/ui/StatCard'
+import { BadgeItem } from '../components/ui/BadgeItem'
 
-const Progress: React.FC = () => {
-  const [summary, setSummary] = useState<any>(null);
-  const [badges, setBadges] = useState<any[]>([]);
+export default function Progress() {
+  const [badges, setBadges] = useState<Badge[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const safeStats = {
+    level: stats?.gamification?.level ?? 1,
+    xp: stats?.gamification?.xp ? (stats.gamification.xp % 100) : 0,
+    streak: stats?.gamification?.streak ?? 0,
+    hearts: 5
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const s = await api('/api/progress/summary');
-        const b = await api('/api/badges');
-        setSummary(s);
-        setBadges(b);
-      } catch (err) {
-        console.error(err);
+        const [badgesData, statsData] = await Promise.all([
+          userService.getBadges(),
+          userService.getStats()
+        ])
+        setBadges(badgesData)
+        setStats(statsData)
+      } catch (error) {
+        console.error('Erreur progression:', error)
+      } finally {
+        setIsLoading(false)
       }
-    };
-    fetchData();
-  }, []);
+    }
+    fetchData()
+  }, [])
+
+  if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="space-y-8 pb-12">
-      <header>
-        <h2 className="text-3xl text-primary font-satisfy">Mon Journal de Bord</h2>
-        <p className="text-xs text-primary-dark font-extrabold uppercase tracking-widest italic flex items-center gap-1">
-          <Star size={12} className="text-accent fill-accent" /> Regarde comme tu brilles !
-        </p>
-      </header>
-
-      <div className="grid grid-cols-2 gap-6">
-        <BouncyCard className="bg-gradient-to-br from-primary-light to-white p-6 relative overflow-hidden">
-          <div className="absolute top-[-20px] right-[-20px] w-16 h-16 bg-white/20 rounded-full"></div>
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-sm mb-4">
-            <Clock size={20} />
-          </div>
-          <p className="text-4xl font-bold text-primary font-decorative tracking-tighter">
-            {Math.round((summary?.totalTemps || 0) / 60)}h
-          </p>
-          <p className="text-[10px] text-primary-dark uppercase font-extrabold tracking-widest mt-1">Sagesse accumulée</p>
-        </BouncyCard>
-
-        <BouncyCard delay={0.1} className="bg-gradient-to-br from-accent to-white p-6 relative overflow-hidden">
-          <div className="absolute bottom-[-20px] left-[-20px] w-16 h-16 bg-white/20 rounded-full"></div>
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-accent shadow-sm mb-4">
-            <Trophy size={20} className="fill-accent text-accent-dark" />
-          </div>
-          <p className="text-4xl font-bold text-text font-decorative tracking-tighter">
-            {summary?.count || 0}
-          </p>
-          <p className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-1">Missions réussies</p>
-        </BouncyCard>
-      </div>
-
-      <BouncyCard delay={0.2}>
-        <h3 className="text-xl text-primary mb-6 flex items-center gap-2">
-          Mes Trophées Adorables <Award size={20} className="text-accent" />
-        </h3>
-        {badges.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6">
-            {badges.map((b, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                className="flex flex-col items-center group"
-              >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br from-white to-bg border-4 ${b.unlocked ? 'border-primary' : 'border-gray-200 grayscale'} shadow-lg mb-2 relative`}>
-                  <span className="text-3xl">{b.icon || '⭐'}</span>
-                  {b.unlocked && <Sparkle className="absolute -top-1 -right-1 scale-75" />}
-                </div>
-                <p className={`text-[10px] font-extrabold text-center uppercase tracking-tighter ${b.unlocked ? 'text-text' : 'text-gray-300'}`}>
-                  {b.name}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
-              <Trophy size={32} className="text-gray-200" />
-            </div>
-            <p className="text-sm text-gray-400 italic">Tes premiers badges t'attendent... ✨</p>
-          </div>
-        )}
-      </BouncyCard>
-
-      <BouncyCard delay={0.3} className="bg-white/40 border-dashed border-primary-light/50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs">📈</div>
-          <h3 className="text-lg text-primary-dark">Activité Récente</h3>
+    <div className="max-w-6xl mx-auto py-4 md:py-8 space-y-8 md:space-y-12">
+      {/* Statistiques Globales */}
+      <section>
+        <h2 className="text-2xl md:text-3xl font-bold text-hello-black mb-4 md:mb-8 flex items-center gap-3">
+          Tableau de Bord <Star className="text-soft-gold fill-current" />
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <StatCard 
+            icon={<Heart className="text-pink-candy" size={20} />}
+            label="Cœurs"
+            value={safeStats.hearts}
+            className="border-pink-milk/30"
+          />
+          <StatCard 
+            icon={<Trophy className="text-pink-candy" size={20} />}
+            label="Niveau"
+            value={safeStats.level}
+            className="border-pink-milk/30"
+          />
+          <StatCard 
+            icon={<Target className="text-pink-candy" size={20} />}
+            label="XP"
+            value={`${safeStats.xp}%`}
+            className="border-pink-milk/30"
+          />
+          <StatCard 
+            icon={<Star className="text-soft-gold" size={20} />}
+            label="Série"
+            value={`${safeStats.streak} j`}
+            className="border-pink-milk/30"
+          />
         </div>
-        <div className="h-32 flex items-end justify-between gap-2 px-2">
-          {[10, 30, 15, 60, 45, 20, 50].map((h, i) => (
-            <motion.div
-              key={i}
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
-              className="flex-1 bg-gradient-to-t from-primary to-primary-light rounded-t-full shadow-inner relative group"
-            >
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold">
-                {h}m
-              </div>
-            </motion.div>
+      </section>
+
+      {/* Section Badges */}
+      <section>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-hello-black flex items-center gap-3">
+            Mes Badges Adorables <Trophy className="text-pink-candy" />
+          </h2>
+          <span className="bg-pink-milk text-pink-candy font-bold px-4 py-1 rounded-full text-xs md:text-sm">
+            {badges.filter(b => b.awardedAt).length} / {badges.length} Débloqués
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+          {badges.map((badge) => (
+            <BadgeItem key={badge._id} badge={badge} />
           ))}
         </div>
-        <div className="flex justify-between mt-3 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">
-          <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
-        </div>
-      </BouncyCard>
-
-      <div className="text-center pt-4">
-        <Sparkle />
-        <p className="text-[10px] text-primary-light font-extrabold uppercase tracking-[0.5em] mt-2">Love Your Progress</p>
-      </div>
+      </section>
     </div>
-  );
-};
-
-export default Progress;
+  )
+}

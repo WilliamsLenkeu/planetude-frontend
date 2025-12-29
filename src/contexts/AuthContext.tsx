@@ -1,69 +1,84 @@
-import React, { createContext, useState, useEffect } from 'react';
-import api from '../lib/api';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import type { User } from '../types'
 
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  gender?: string;
-  preferences?: any;
+type AuthContextValue = {
+  token: string | null
+  user: User | null
+  setToken: (t: string | null) => void
+  logout: () => void
+  isAuthenticated: boolean
+  isInitializing: boolean
 }
 
-export interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
-  logout: () => void;
-}
+const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [token, setTokenState] = useState<string | null>(localStorage.getItem('token'))
+  const [user, setUser] = useState<User | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token')
+      
+      if (!storedToken) {
+        setTokenState(null)
+        setUser(null)
+        setIsInitializing(false)
+        return
+      }
+
       try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('user');
+        const response = await fetch('https://plan-etude.koyeb.app/api/user/profile', {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data)
+          setTokenState(storedToken)
+        } else {
+          // Si le token est invalide (401, 404, etc.)
+          localStorage.removeItem('token')
+          setTokenState(null)
+          setUser(null)
+        }
+      } catch (error) {
+        console.error('Erreur initialisation auth:', error)
+        // En cas d'erreur réseau, on garde le token mais on arrête l'initialisation
+      } finally {
+        setIsInitializing(false)
       }
     }
-    setLoading(false);
-  }, []);
 
-  const login = async (email: string, password: string) => {
-    const data = await api('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    setUser(data);
-  };
+    initAuth()
+  }, [])
 
-  const register = async (userData: any) => {
-    const data = await api('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    setUser(data);
-  };
+  const setToken = (t: string | null) => {
+    if (t) {
+      localStorage.setItem('token', t)
+    } else {
+      localStorage.removeItem('token')
+    }
+    setTokenState(t)
+  }
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+    setToken(null)
+    setUser(null)
+  }
+
+  const isAuthenticated = !!token
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ token, user, setToken, logout, isAuthenticated, isInitializing }}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
+}

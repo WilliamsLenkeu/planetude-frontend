@@ -1,105 +1,130 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import api from '../lib/api';
-import { BouncyCard, Heart, Sparkle } from '../components/AestheticComponents';
-import { ChevronLeft, Calendar, Clock, BookOpen, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { planningService } from '../services/planning.service'
+import type { Planning, Session } from '../types/index'
+import toast from 'react-hot-toast'
 
-const PlanningDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [planning, setPlanning] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export default function PlanningDetail() {
+  const { id } = useParams()
+  const [data, setData] = useState<{ planning: Planning, sessions: Session[] } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchPlanning = async () => {
+    const fetchData = async () => {
+      if (!id) return
       try {
-        const data = await api('/api/planning');
-        const found = data.find((p: any) => p._id === id);
-        setPlanning(found);
-      } catch (err) {
-        console.error(err);
+        const result = await planningService.getById(id)
+        setData({ planning: result, sessions: result.sessions || [] })
+      } catch (error) {
+        console.error('Erreur detail planning:', error)
+        toast.error('Impossible de charger les détails du planning')
       } finally {
-        setLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchPlanning();
-  }, [id]);
+    }
+    fetchData()
+  }, [id])
 
-  if (loading) return (
-    <div className="p-20 text-center text-primary italic flex flex-col items-center gap-4">
-      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="text-4xl">
-        🍭
-      </motion.div>
-      Chargement de tes sessions magiques...
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-bounce">
+          <div className="w-16 h-16 bg-pink-candy rounded-full border-4 border-white shadow-kawaii flex items-center justify-center">
+            <Star className="text-white" size={32} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-  if (!planning) return (
-    <div className="p-12 text-center">
-      <p className="text-4xl mb-4">😿</p>
-      <p className="text-primary-dark font-bold font-decorative text-xl">Planning non trouvé...</p>
-      <Link to="/planning" className="text-primary underline mt-4 inline-block font-medium">Retourner aux plannings 🌸</Link>
-    </div>
-  );
+  if (!data) return null
+
+  const { planning, sessions } = data
 
   return (
-    <div className="space-y-10">
-      <Link to="/planning" className="inline-flex items-center gap-2 text-primary font-bold hover:translate-x-[-4px] transition-transform">
-        <ChevronLeft size={24} /> <span className="font-decorative text-lg">Retour</span>
-      </Link>
-
-      <header className="relative">
-        <h2 className="text-4xl text-primary font-satisfy mb-2">Détails du Planning</h2>
-        <div className="flex items-center gap-2">
-          <Calendar size={16} className="text-primary-light" />
-          <p className="text-gray-500 font-medium italic">Du {new Date(planning.dateDebut).toLocaleDateString()}</p>
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div className="flex items-center gap-4">
+        <Link to="/planning" className="p-2 bg-pink-milk rounded-full text-pink-candy hover:scale-110 transition-all">
+          <ArrowLeft size={24} />
+        </Link>
+        <div>
+          <h2 className="text-3xl font-bold text-hello-black">{planning.title} 🎀</h2>
+          <p className="text-hello-black/60">Créé le {new Date(planning.createdAt).toLocaleDateString()}</p>
         </div>
-        <Sparkle className="absolute -top-4 -right-4" />
-      </header>
+      </div>
 
-      <div className="grid gap-6">
-        {planning.sessions?.map((s: any, i: number) => (
-          <BouncyCard key={i} delay={i * 0.1} className="group border-l-[12px] border-primary">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="w-16 h-16 bg-accent rounded-full text-primary flex items-center justify-center text-3xl shadow-lg ring-4 ring-white shrink-0">
-                <BookOpen size={24} />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-2xl text-text font-decorative">{s.matiere}</h4>
-                <div className="flex flex-wrap items-center gap-6 mt-3 text-sm text-gray-500 font-medium">
-                  <div className="flex items-center gap-2 bg-bg/50 px-3 py-1 rounded-full border border-white">
-                    <Clock size={16} className="text-primary" />
-                    <span className="text-primary-dark">
-                      {new Date(s.debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      <span className="mx-2 opacity-50">•</span>
-                      {new Date(s.fin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+      <div className="flex flex-wrap gap-4">
+        <button className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors">
+          <FileText size={18} /> Export PDF
+        </button>
+        <button className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors">
+          <Calendar size={18} /> Export iCal
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold text-hello-black flex items-center gap-2">
+          Mes Sessions de Goûter 🧁
+        </h3>
+        
+        <div className="grid gap-4">
+          {sessions.length === 0 ? (
+            <div className="kawaii-card text-center py-8 border-dashed border-pink-candy/30">
+              <p className="text-hello-black/40">Aucune session prévue dans ce planning... 🌸</p>
+            </div>
+          ) : (
+            sessions.map((session, index) => (
+              <motion.div
+                key={session._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`kawaii-card relative overflow-hidden border-2 ${
+                  session.statut === 'termine' ? 'border-green-200 bg-green-50/30' : 'border-pink-candy/20 bg-white'
+                }`}
+              >
+                {/* Aspect "Ticket Rose" */}
+                <div className="absolute top-0 right-0 w-12 h-12 bg-pink-candy/10 rounded-bl-full flex items-center justify-center">
+                  {session.statut === 'termine' ? (
+                    <CheckCircle className="text-green-500" size={20} />
+                  ) : (
+                    <div className="w-2 h-2 bg-pink-candy rounded-full animate-pulse"></div>
+                  )}
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold text-pink-candy uppercase tracking-widest">{session.matiere}</span>
+                    <h4 className="text-xl font-bold text-hello-black">
+                      {session.title || `Session ${new Date(session.debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                    </h4>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={16} />
-                    <span>{new Date(s.debut).toLocaleDateString()}</span>
+                  
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 text-hello-black/60 font-semibold">
+                      <Clock size={18} /> {session.duration || 0} min
+                    </div>
+                    {session.statut !== 'termine' && (
+                      <button className="kawaii-button py-2 px-4 text-sm">
+                        Démarrer ✨
+                      </button>
+                    )}
                   </div>
                 </div>
-                {s.notes && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-6 text-sm italic bg-pink-50/50 p-4 rounded-2xl border-l-4 border-primary-light relative"
-                  >
-                    <Heart className="absolute -right-1 -top-1 opacity-30" size={14} />
-                    "{s.notes}"
-                  </motion.div>
-                )}
-              </div>
-              <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
-                <Sparkles className="text-accent" size={24} />
-              </div>
-            </div>
-          </BouncyCard>
-        ))}
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="kawaii-card bg-soft-gold/10 border-2 border-soft-gold/30">
+        <p className="text-sm italic text-hello-black/80">
+          "N'oublie pas de prendre une petite pause thé entre chaque session ! Ta concentration en sera meilleure. 🌸"
+        </p>
+        <p className="mt-2 font-bold text-hello-black/40">— PixelCoach Advice</p>
       </div>
     </div>
-  );
-};
-
-export default PlanningDetail;
+  )
+}

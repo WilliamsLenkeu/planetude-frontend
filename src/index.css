@@ -1,166 +1,183 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&family=Satisfy&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FF77A9;
-  --color-primary-light: #FFC0CB;
-  --color-primary-dark: #E65A8E;
-  --color-accent: #FFF3B0;
-  --color-bg: #FFF0E6;
-  --color-lilac: #CDA4FF;
-  --color-text: #444444;
-  --color-white: #FFFFFF;
-
-  --radius-kawaii-sm: 12px;
-  --radius-kawaii-md: 20px;
-  --radius-kawaii-lg: 32px;
-  --radius-cloud: 50% 50% 50% 50% / 60% 60% 40% 40%;
-
-  --shadow-kawaii: 0 10px 25px -5px rgba(255, 119, 169, 0.2), 0 8px 10px -6px rgba(255, 119, 169, 0.1);
+  --color-pink-candy: #FFD1DC;
+  --color-pink-milk: #FFF0F5;
+  --color-pink-deep: #FFB8C8;
+  --color-hello-black: #4A4A4A;
+  --color-soft-gold: #FEF3C7;
+  --color-magic-purple: #E9D5FF;
+  --color-clean-beige: #FDFBF7;
+  --color-clean-white: #FFFFFF;
+  --color-kitty-red: #FF4D6D;
+  
+  --radius-kawaii: 1.5rem;
+  --radius-kawaii-lg: 2rem;
+  
+  --shadow-kawaii: 0 10px 30px -5px rgba(255, 209, 220, 0.3);
+  --shadow-clean: 0 4px 20px rgba(0, 0, 0, 0.03);
   --shadow-inner-soft: inset 0 2px 4px 0 rgba(255, 255, 255, 0.5);
+}
 
-  --font-sans: "Poppins", sans-serif;
-  --font-decorative: "Baloo 2", cursive;
-  --font-satisfy: "Satisfy", cursive;
+:root {
+  color-scheme: light !important;
+  cursor: url('https://cur.cursors-4u.net/symbols/sym-1/sym49.cur'), auto;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-pink-milk);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-pink-candy);
+  border-radius: 10px;
+  border: 3px solid var(--color-pink-milk);
 }
 
 @layer base {
-  body {
-    background-color: var(--color-bg);
-    background-image: radial-gradient(var(--color-primary-light) 1px, transparent 1px);
-    background-size: 30px 30px;
-    color: var(--color-text);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
     margin: 0;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-decorative);
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    padding: 0;
+    background: var(--color-clean-beige);
+    color: var(--color-hello-black);
+    font-family: 'Quicksand', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-.glass-morphism {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.kawaii-card {
-  background-color: var(--color-white);
-  border-radius: var(--radius-kawaii-lg);
-  box-shadow: var(--shadow-kawaii);
-  padding: 2rem;
-  border: 3px solid var(--color-primary-light);
-  position: relative;
-  overflow: hidden;
-}
-
-.kawaii-card::before {
-  content: "❤";
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  color: var(--color-primary-light);
-  font-size: 1.2rem;
-  opacity: 0.5;
-}
-
-.kawaii-button {
-  padding: 1rem 2rem;
-  border-radius: 9999px;
-  font-weight: 800;
-  font-family: var(--font-decorative);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  text-align: center;
-  cursor: pointer;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.kawaii-button:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 15px 20px -5px rgba(255, 119, 169, 0.4);
-}
-
-.kawaii-button:active {
-  transform: scale(0.95);
-}
-
-.kawaii-button-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.kawaii-button-accent {
-  background: linear-gradient(135deg, var(--color-accent) 0%, #FFF9D0 100%);
-  color: var(--color-text);
-  border: 2px solid var(--color-primary-light);
-}
-
-.kawaii-input {
-  width: 100%;
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-kawaii-md);
-  border: 3px solid var(--color-primary-light);
-  outline: none;
-  transition: all 0.3s ease;
-  background-color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-}
-
-.kawaii-input:focus {
-  border-color: var(--color-primary);
-  background-color: white;
-  box-shadow: 0 0 0 4px rgba(255, 119, 169, 0.1);
-}
-
-/* Animations custom */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
   }
-
-  50% {
-    transform: translateY(-10px);
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
   }
-
-  100% {
-    transform: translateY(0px);
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-pink-candy);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
 }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-
-  0%,
-  100% {
-    opacity: 0;
-    scale: 0;
+@layer components {
+  .kawaii-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-kawaii);
+    box-shadow: var(--shadow-clean);
+    padding: 2rem;
+    border: 1px solid rgba(255, 209, 220, 0.2);
+    transition: all 0.3s ease;
+  }
+  .kawaii-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-kawaii);
+    background: white;
+    border-color: var(--color-pink-candy);
   }
 
-  50% {
-    opacity: 1;
-    scale: 1.2;
+  .kawaii-button {
+    background: linear-gradient(135deg, var(--color-pink-candy) 0%, var(--color-pink-deep) 100%);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    font-weight: 700;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-kawaii-lg);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(255, 184, 200, 0.4);
+    border: none;
+    cursor: pointer;
+  }
+  .kawaii-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(255, 184, 200, 0.4);
+  }
+  .kawaii-button:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 8px 20px rgba(255, 184, 200, 0.6);
+  }
+
+  .kawaii-input {
+    background: white;
+    border: 2px solid rgba(255, 209, 220, 0.3);
+    border-radius: var(--radius-kawaii);
+    padding: 1rem 1.5rem;
+    transition: all 0.3s ease;
+    color: var(--color-hello-black);
+    box-shadow: var(--shadow-inner-soft);
+  }
+  .kawaii-input:focus {
+    outline: none;
+    border-color: var(--color-pink-candy);
+    box-shadow: 0 0 0 4px rgba(255, 209, 220, 0.2), var(--shadow-inner-soft);
+    transform: scale(1.01);
+  }
+
+  .sparkle {
+    position: relative;
+  }
+  .sparkle::after {
+    content: '✨';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 1.2rem;
+    animation: sparkle-anim 2s infinite;
   }
 }
 
-.sparkle-effect {
-  position: absolute;
-  pointer-events: none;
-  animation: sparkle 2s ease-in-out infinite;
+@keyframes sparkle-anim {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
 }
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.bouncy {
+    animation: bounce-subtle 0.3s ease-in-out;
+  }
+
+  /* Markdown Styling in Chat */
+  .prose-pink {
+    --tw-prose-body: var(--color-hello-black);
+    --tw-prose-headings: var(--color-hello-black);
+    --tw-prose-links: #FFD1DC;
+    --tw-prose-bold: var(--color-hello-black);
+    --tw-prose-bullets: #FFD1DC;
+  }
+
+  .prose-sm p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose-sm ul {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 1.25em;
+  }
+
+  .prose-sm li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }

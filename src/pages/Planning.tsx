@@ -1,206 +1,253 @@
-import React, { useEffect, useState } from 'react';
-import api from '../lib/api';
-import { BouncyCard, Heart } from '../components/AestheticComponents';
-import { Calendar, Plus, Trash2, FileText, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { Plus, Trash2, Download, X, Calendar as CalendarIcon, BookOpen, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { planningService } from '../services/planning.service'
+import type { Planning as PlanningType } from '../types/index'
+import toast from 'react-hot-toast'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { Card } from '../components/ui/Card'
+import { motion, AnimatePresence } from 'framer-motion'
 
-const Planning: React.FC = () => {
-  const [plannings, setPlannings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [newPlan, setNewPlan] = useState({
-    dateDebut: new Date().toISOString().split('T')[0],
-    heuresParJour: 2,
-    matieres: ''
-  });
+export default function Planning() {
+  const [plannings, setPlannings] = useState<PlanningType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const fetchPlannings = async () => {
-    try {
-      const data = await api('/api/planning');
-      setPlannings(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    periode: 'semaine',
+    dateDebut: new Date().toISOString().split('T')[0]
+  })
 
   useEffect(() => {
-    fetchPlannings();
-  }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api('/api/planning/generate', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...newPlan,
-          matieres: newPlan.matieres.split(',').map(m => m.trim())
-        })
-      });
-      setShowForm(false);
-      fetchPlannings();
-    } catch (err) {
-      alert('Erreur lors de la création du planning 🌸');
+    const fetchPlannings = async () => {
+      try {
+        const data = await planningService.getAll()
+        setPlannings(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Erreur plannings:', error)
+        toast.error('Impossible de charger les plannings')
+        setPlannings([])
+      } finally {
+        setIsLoading(false)
+      }
     }
-  };
+    fetchPlannings()
+  }, [])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Voulez-tu vraiment supprimer ce petit planning ? 🎀')) return;
+    if (!confirm('Veux-tu vraiment supprimer ce planning ? 🥺')) return
     try {
-      await api(`/api/planning/${id}`, { method: 'DELETE' });
-      fetchPlannings();
-    } catch (err) {
-      console.error(err);
+      await planningService.delete(id)
+      setPlannings(plannings.filter(p => p._id !== id))
+      toast.success('Planning supprimé !')
+    } catch (error) {
+      toast.error('Erreur lors de la suppression')
     }
-  };
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const newPlanning = await planningService.create({
+        ...formData,
+        sessions: [] // On commence avec un planning vide
+      })
+      setPlannings([newPlanning, ...plannings])
+      setIsModalOpen(false)
+      toast.success('Nouveau planning créé ! ✨')
+      setFormData({
+        title: '',
+        periode: 'semaine',
+        dateDebut: new Date().toISOString().split('T')[0]
+      })
+    } catch (error) {
+      toast.error('Erreur lors de la création')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const safePlannings = Array.isArray(plannings) ? plannings : []
+
+  if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="space-y-8">
-      <header className="flex justify-between items-end">
+    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 relative">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl text-primary font-satisfy">Mes Plannings</h2>
-          <p className="text-xs text-primary-dark font-extrabold uppercase tracking-widest italic">Organise tes rêves ✨</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-hello-black">Mes Plannings 📅</h2>
+          <p className="text-sm md:text-base text-hello-black/60">Organise tes révisions avec style.</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowForm(!showForm)}
-          className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-kawaii border-2 border-white"
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="kawaii-button !py-2 !px-4 md:!py-3 md:!px-6 text-sm flex items-center gap-2 w-full md:w-auto justify-center"
         >
-          {showForm ? <Trash2 size={24} className="rotate-45" /> : <Plus size={28} />}
-        </motion.button>
-      </header>
+          <Plus size={18} /> Nouveau Planning
+        </button>
+      </div>
 
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.9 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.9 }}
-            className="overflow-hidden"
+      {safePlannings.length === 0 ? (
+        <Card className="text-center py-12">
+          <p className="text-hello-black/50 mb-4">Tu n'as pas encore de planning... 🌸</p>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="text-pink-candy font-bold hover:underline"
           >
-            <BouncyCard className="bg-gradient-to-br from-primary-light/20 to-white border-dashed">
-              <h3 className="text-xl text-primary mb-6 flex items-center gap-2">
-                Nouveau Planning <Heart />
-              </h3>
-              <form onSubmit={handleCreate} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Date de début</label>
+            Créer mon premier planning
+          </button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {safePlannings.map((planning) => (
+            <PlanningCardItem 
+              key={planning._id}
+              planning={planning}
+              onDelete={() => handleDelete(planning._id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modal de Création */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-hello-black/20 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-kawaii-lg shadow-kawaii p-6 md:p-8 border-2 border-pink-milk"
+            >
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 p-2 text-hello-black/20 hover:text-pink-candy transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-pink-milk rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CalendarIcon className="text-pink-candy" size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-hello-black">Nouveau Planning 🎀</h3>
+                <p className="text-sm text-hello-black/60 italic">"Planifier, c'est déjà réussir !"</p>
+              </div>
+
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-hello-black/40 uppercase ml-2 flex items-center gap-2">
+                    <BookOpen size={12} /> Titre du planning
+                  </label>
                   <input
-                    type="date"
-                    className="kawaii-input"
-                    value={newPlan.dateDebut}
-                    onChange={(e) => setNewPlan({ ...newPlan, dateDebut: e.target.value })}
                     required
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Ex: Révisions Partiels 🌸"
+                    className="w-full bg-pink-milk/20 border-2 border-pink-milk/50 rounded-kawaii p-3 text-hello-black placeholder:text-hello-black/20 focus:outline-none focus:border-pink-candy transition-colors"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Heures par jour</label>
-                  <input
-                    type="number"
-                    className="kawaii-input"
-                    value={newPlan.heuresParJour}
-                    onChange={(e) => setNewPlan({ ...newPlan, heuresParJour: parseInt(e.target.value) })}
-                    min="1" max="12"
-                    required
-                  />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-hello-black/40 uppercase ml-2 flex items-center gap-2">
+                      <Clock size={12} /> Période
+                    </label>
+                    <select
+                      value={formData.periode}
+                      onChange={(e) => setFormData({ ...formData, periode: e.target.value })}
+                      className="w-full bg-pink-milk/20 border-2 border-pink-milk/50 rounded-kawaii p-3 text-hello-black focus:outline-none focus:border-pink-candy transition-colors appearance-none cursor-pointer"
+                    >
+                      <option value="jour">Jour</option>
+                      <option value="semaine">Semaine</option>
+                      <option value="mois">Mois</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-hello-black/40 uppercase ml-2 flex items-center gap-2">
+                      <CalendarIcon size={12} /> Début
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dateDebut}
+                      onChange={(e) => setFormData({ ...formData, dateDebut: e.target.value })}
+                      className="w-full bg-pink-milk/20 border-2 border-pink-milk/50 rounded-kawaii p-3 text-hello-black focus:outline-none focus:border-pink-candy transition-colors cursor-pointer"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-primary-dark uppercase tracking-wider mb-2">Matières (séparées par des virgules)</label>
-                  <textarea
-                    className="kawaii-input min-h-[100px]"
-                    placeholder="Maths, Anglais, Code... 🌸"
-                    value={newPlan.matieres}
-                    onChange={(e) => setNewPlan({ ...newPlan, matieres: e.target.value })}
-                    required
-                  ></textarea>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+
+                <button 
+                  disabled={isSubmitting}
                   type="submit"
-                  className="w-full kawaii-button kawaii-button-primary py-4 text-lg"
+                  className="w-full kawaii-button py-4 mt-4 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Générer ma Magie 🪄
-                </motion.button>
+                  {isSubmitting ? 'Création...' : 'Créer mon planning ✨'}
+                </button>
               </form>
-            </BouncyCard>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
-
-      <div className="grid gap-6">
-        {loading ? (
-          <div className="p-12 text-center text-primary-dark font-medium animate-pulse italic">
-            Chargement de tes secrets... 🍭
-          </div>
-        ) : plannings.length > 0 ? (
-          plannings.map((p, i) => (
-            <BouncyCard key={p._id} delay={i * 0.1} className="group hover:border-primary transition-colors">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-accent/30 rounded-full flex items-center justify-center text-2xl shadow-inner border-2 border-white">
-                    📅
-                  </div>
-                  <div>
-                    <h4 className="text-lg text-text">Planning du {new Date(p.dateDebut).toLocaleDateString()}</h4>
-                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">
-                      {p.sessions?.length || 0} Sessions • {p.matieres?.join(', ')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDelete(p._id)}
-                  className="text-gray-300 hover:text-red-400 transition-colors p-2"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-
-              <div className="mt-8 flex gap-3 flex-wrap">
-                <Link to={`/planning/${p._id}`} className="kawaii-button kawaii-button-accent text-xs py-2 px-4 flex-1">
-                  Détails <Sparkles size={12} />
-                </Link>
-                <a
-                  href={`https://plan-etude.koyeb.app/api/planning/${p._id}/export/ical`}
-                  className="kawaii-button bg-lilac/30 text-lilac-dark text-xs py-2 px-4 hover:bg-lilac/50 transition-colors"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  iCal <Calendar size={12} />
-                </a>
-                <a
-                  href={`https://plan-etude.koyeb.app/api/planning/${p._id}/export/pdf`}
-                  className="kawaii-button bg-gray-100 text-gray-500 text-xs py-2 px-4 hover:bg-gray-200"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  PDF <FileText size={12} />
-                </a>
-              </div>
-            </BouncyCard>
-          ))
-        ) : (
-          <div className="text-center py-20 bg-white/30 rounded-3xl border-3 border-dashed border-primary-light">
-            <motion.span
-              animate={{ scale: [1, 1.5, 1], rotate: [0, 10, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 3 }}
-              className="text-6xl block mb-4"
-            >
-              🍥
-            </motion.span>
-            <p className="text-primary-dark font-medium italic">Aucun planning pour le moment...</p>
-            <button onClick={() => setShowForm(true)} className="text-primary font-bold underline mt-2 text-sm">
-              Crée ton premier planning ici ! 🌸
-            </button>
-          </div>
-        )}
-      </div>
     </div>
-  );
-};
+  )
+}
 
-export default Planning;
+function PlanningCardItem({ planning, onDelete }: { planning: PlanningType, onDelete: () => void }) {
+  return (
+    <Link to={`/planning/${planning._id}`}>
+      <Card 
+        whileHover={{ y: -5 }}
+        className="hover:border-pink-candy transition-colors flex flex-col justify-between h-48"
+      >
+        <div>
+          <div className="flex justify-between items-start mb-2">
+            <span className="bg-pink-milk text-pink-candy text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              {planning.periode}
+            </span>
+            <div className="flex gap-2">
+              <button className="p-1 text-hello-black/40 hover:text-pink-candy transition-colors">
+                <Download size={18} />
+              </button>
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  e.stopPropagation();
+                  onDelete(); 
+                }}
+                className="p-1 text-hello-black/40 hover:text-red-400 transition-colors"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-hello-black group-hover:text-pink-candy transition-colors">
+            {planning.title || `Planning du ${new Date(planning.createdAt).toLocaleDateString()}`}
+          </h3>
+          <p className="text-hello-black/40 text-sm mt-1">
+            Créé le {new Date(planning.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        
+        <div className="flex justify-between items-center pt-4 border-t border-pink-milk/50">
+          <span className="text-sm font-bold text-hello-black/60">
+            {planning.sessions?.length || 0} sessions
+          </span>
+          <span className="text-pink-candy font-bold text-sm flex items-center gap-1">
+            Voir <Plus size={14} />
+          </span>
+        </div>
+      </Card>
+    </Link>
+  )
+}

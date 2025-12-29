@@ -6,25 +6,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#FF77A9',
-          100: '#FFC0CB',
-        },
-        accent: '#FFF3B0',
-        bg: '#FFF0E6',
-        lilac: '#CDA4FF',
-        text: '#333333',
+        'pink-candy': '#FFD1DC',
+        'pink-milk': '#FFF0F5',
+        'soft-gold': '#FDE68A',
+        'hello-black': '#333333',
       },
       borderRadius: {
-        'kawaii-sm': '8px',
-        'kawaii-lg': '24px',
+        'kawaii': '24px',
+        'kawaii-lg': '32px',
       },
       boxShadow: {
-        'soft': '0 6px 18px rgba(0,0,0,0.06)',
+        'kawaii': '0 10px 25px rgba(255, 209, 220, 0.3)',
       },
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
-        decorative: ['"Baloo 2"', 'cursive'],
+        'quicksand': ['Quicksand', 'sans-serif'],
       },
     },
   },

@@ -1,174 +1,198 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import api from '../lib/api';
-import { BouncyCard, Heart } from '../components/AestheticComponents';
-import AffirmationWidget from '../components/AffirmationWidget';
-import { Calendar, Clock, Trophy, MessageCircle, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { Heart, Star, Trophy, Clock, ArrowRight, Sparkles as SparklesIcon, Calendar } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { userService } from '../services/user.service'
+import { useAuth } from '../contexts/AuthContext'
+import type { Stats } from '../types/index'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { StatCard } from '../components/ui/StatCard'
 
-const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<any>(null);
-  const [reminders, setReminders] = useState<any[]>([]);
+export default function Dashboard() {
+  const { user } = useAuth()
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // On extrait le prénom pour une interaction plus naturelle
+  const firstName = user?.name?.split(' ')[0] || 'ma belle'
+
+  // Valeurs par défaut sécurisées
+  const safeStats = {
+    level: stats?.gamification?.level ?? 1,
+    xp: stats?.gamification?.xp ? (stats.gamification.xp % 100) : 0,
+    streak: stats?.gamification?.streak ?? 0,
+    totalStudyTime: stats?.gamification?.totalStudyTime ?? 0,
+    completionRate: stats?.completionRate ?? 0,
+    hearts: 5
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
       try {
-        const statsData = await api('/api/progress/summary');
-        const remindersData = await api('/api/reminders');
-        setStats(statsData);
-        setReminders(remindersData.slice(0, 3));
-      } catch (err) {
-        console.error('Failed to fetch dashboard data', err);
+        const data = await userService.getStats()
+        setStats(data)
+      } catch (error) {
+        console.error('Erreur stats:', error)
+        toast.error('Impossible de charger les statistiques')
+      } finally {
+        setIsLoading(false)
       }
-    };
-    fetchData();
-  }, []);
+    }
+    fetchStats()
+  }, [])
 
+  if (isLoading) return <LoadingSpinner />
+  
   return (
-    <div className="space-y-8 pb-12">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div className="flex items-center gap-6">
-          <motion.div
-            whileHover={{ rotate: [0, -10, 10, 0] }}
-            className="relative"
-          >
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-primary-light to-white p-1 shadow-lg border-2 border-primary-light">
-              <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-5xl overflow-hidden">
-                {user?.gender === 'F' ? '👸' : '🤴'}
-              </div>
+    <div className="h-full flex flex-col gap-4 md:gap-6 relative">
+      {/* Éléments Hello Kitty discrets */}
+      <div className="absolute top-0 right-0 opacity-10 pointer-events-none select-none text-4xl rotate-[15deg] z-0">🎀</div>
+      <div className="absolute bottom-10 left-0 opacity-10 pointer-events-none select-none text-3xl rotate-[-10deg] z-0">✨</div>
+
+      {/* Header : Bienvenue & Niveau */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:col-span-2 bg-white/60 backdrop-blur-sm border border-pink-milk/50 p-4 md:p-6 rounded-kawaii shadow-clean flex flex-col justify-center"
+        >
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl md:text-2xl font-bold text-hello-black">
+              Coucou {firstName} ! <span className="text-pink-candy">🎀</span>
+            </h1>
+          </div>
+          <p className="text-hello-black/50 text-xs md:text-sm font-medium italic mt-1">
+            "Chaque petit pas te rapproche de tes rêves. Prête pour aujourd'hui ? ✨"
+          </p>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/60 backdrop-blur-sm border border-pink-milk/50 p-4 md:p-6 rounded-kawaii shadow-clean flex items-center gap-4"
+        >
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 bg-pink-candy rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <span className="text-lg font-bold text-hello-black">{safeStats.level}</span>
             </div>
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute -bottom-1 -right-1 bg-white rounded-full p-2 shadow-sm"
-            >
-              <Heart size={20} />
-            </motion.div>
-          </motion.div>
-          <div>
-            <h2 className="text-4xl text-primary font-satisfy">Coucou, {user?.name} !</h2>
-            <p className="text-gray-500 font-medium italic">Comment se passe ta journée magique ? ✨</p>
+            <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm border border-pink-milk">
+              <Trophy size={12} className="text-pink-candy" />
+            </div>
           </div>
-        </div>
-
-        <div className="hidden lg:block">
-          <AffirmationWidget />
-        </div>
-      </header>
-
-      <div className="lg:hidden">
-        <AffirmationWidget />
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-end mb-1">
+              <span className="text-[10px] font-bold text-hello-black/40 uppercase">Progression XP</span>
+              <span className="text-[10px] font-bold text-pink-candy">{safeStats.xp}%</span>
+            </div>
+            <div className="h-2 bg-pink-milk/30 rounded-full overflow-hidden border border-pink-milk/10">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${safeStats.xp}%` }}
+                className="h-full bg-pink-candy rounded-full"
+              />
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <BouncyCard className="bg-gradient-to-br from-primary-light/40 to-white border-primary-light/50 text-center p-8 flex flex-col items-center justify-center min-h-[160px]">
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-primary shadow-sm mb-4">
-            <Clock size={28} />
-          </div>
-          <div>
-            <p className="text-4xl font-bold text-primary font-decorative tracking-tighter leading-none">
-              {Math.round((stats?.totalTemps || 0) / 60)}h
-            </p>
-            <p className="text-[10px] text-primary-dark uppercase font-extrabold tracking-widest mt-2">Temps Étudié</p>
-          </div>
-        </BouncyCard>
-
-        <BouncyCard delay={0.1} className="bg-gradient-to-br from-accent/40 to-white border-accent/50 text-center p-8 flex flex-col items-center justify-center min-h-[160px]">
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-accent shadow-sm mb-4">
-            <Trophy size={28} className="fill-accent text-accent-dark" />
-          </div>
-          <div>
-            <p className="text-4xl font-bold text-text font-decorative tracking-tighter leading-none">
-              {stats?.count || 0}
-            </p>
-            <p className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-2">Sessions d'Étude</p>
-          </div>
-        </BouncyCard>
-
-        <div className="md:col-span-2 grid grid-cols-2 gap-6">
-          <Link to="/chat" className="group h-full">
-            <motion.div
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-accent h-full p-6 rounded-kawaii-lg shadow-kawaii border-3 border-white flex flex-col items-center justify-center gap-3 relative overflow-hidden"
-            >
-              <div className="w-14 h-14 bg-white/50 rounded-full flex items-center justify-center text-primary shadow-inner">
-                <MessageCircle size={28} />
-              </div>
-              <span className="font-bold text-sm text-text uppercase tracking-tighter text-center">PixelCoach IA</span>
-            </motion.div>
-          </Link>
-          <Link to="/planning" className="group h-full">
-            <motion.div
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-primary-light h-full p-6 rounded-kawaii-lg shadow-kawaii border-3 border-white flex flex-col items-center justify-center gap-3 relative overflow-hidden"
-            >
-              <div className="w-14 h-14 bg-white/50 rounded-full flex items-center justify-center text-primary shadow-inner">
-                <Calendar size={28} />
-              </div>
-              <span className="font-bold text-sm text-primary-dark uppercase tracking-tighter text-center">Gestion Planning</span>
-            </motion.div>
-          </Link>
+      {/* Main Content : Stats & Actions */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 min-h-0">
+        {/* Colonne Stats Latérale (1/4) - Temps & Série */}
+        <div className="md:col-span-1 grid grid-cols-2 md:grid-cols-1 gap-3 overflow-y-auto custom-scrollbar pr-1 content-start">
+          <StatCard 
+            icon={<Clock className="text-pink-candy" size={18} />}
+            label="Temps total"
+            value={`${Math.floor(safeStats.totalStudyTime / 60)}h ${safeStats.totalStudyTime % 60}m`}
+            className="!p-3 border-pink-milk/30"
+          />
+          <StatCard 
+            icon={<Star className="text-soft-gold" size={18} />}
+            label="Série"
+            value={`${safeStats.streak} jours`}
+            className="!p-3 border-pink-milk/30"
+          />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <BouncyCard delay={0.2} className="lg:col-span-2 relative overflow-visible">
-          <div className="absolute -top-4 -left-2 bg-primary text-white text-[10px] px-4 py-1.5 rounded-full font-bold uppercase tracking-widest shadow-lg z-10">
-            Tes prochains rappels 🎀
+        {/* Colonne Actions & Focus (3/4) */}
+        <div className="md:col-span-3 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Planning & Réussite */}
+            <div className="flex flex-col gap-4">
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-white/80 border border-pink-candy/20 p-5 rounded-kawaii shadow-clean group relative overflow-hidden h-full"
+              >
+                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Calendar size={48} className="text-pink-candy" />
+                </div>
+                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                  Mon Planning 📅
+                </h3>
+                <p className="text-sm text-hello-black/60 mb-4">
+                  {safeStats.totalStudyTime === 0 
+                    ? "Commence ton aventure dès maintenant ! 🌸" 
+                    : "Continue sur ta lancée, tu gères ! ✨"}
+                </p>
+                <Link to="/planning" className="kawaii-button inline-flex items-center gap-2 !py-2 !px-5 text-sm">
+                  Gérer mes sessions <ArrowRight size={16} />
+                </Link>
+              </motion.div>
+              
+              <StatCard 
+                icon={<Trophy className="text-pink-candy" size={18} />}
+                label="Ma Réussite"
+                value={`${safeStats.completionRate}%`}
+                className="!p-4 border-pink-milk/30 bg-white/60 backdrop-blur-sm"
+              />
+            </div>
+
+            {/* PixelCoach & Énergie */}
+            <div className="flex flex-col gap-4">
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-white/80 border border-magic-purple/30 p-5 rounded-kawaii shadow-clean group relative overflow-hidden h-full"
+              >
+                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <SparklesIcon size={48} className="text-magic-purple" />
+                </div>
+                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                  PixelCoach 🐾
+                </h3>
+                <p className="text-sm text-hello-black/60 mb-4">
+                  Besoin d'un conseil ou d'un planning sur mesure ?
+                </p>
+                <Link to="/chat" className="bg-magic-purple/20 text-hello-black font-bold py-2 px-5 rounded-full text-sm hover:bg-magic-purple/40 transition-all inline-flex items-center gap-2">
+                  Discuter avec le coach 🌸
+                </Link>
+              </motion.div>
+
+              <StatCard 
+                icon={<Heart className="text-pink-candy" size={18} />}
+                label="Mon Énergie"
+                value={`${safeStats.hearts}/5`}
+                className="!p-4 border-pink-milk/30 bg-white/60 backdrop-blur-sm"
+              />
+            </div>
           </div>
-          <div className="mt-4 space-y-4">
-            {reminders.length > 0 ? (
-              reminders.map((r, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                  className="flex items-center gap-6 p-5 bg-bg/30 rounded-3xl border-2 border-white hover:bg-white hover:border-primary-light/50 transition-all cursor-pointer group"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm group-hover:scale-110 transition-transform">
-                    <Sparkles size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-lg text-text leading-tight">{r.title}</p>
-                    <p className="text-[11px] text-primary-dark font-extrabold uppercase mt-1 opacity-60">
-                      {new Date(r.date).toLocaleDateString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <div className="text-primary-light opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Heart size={18} />
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center py-10 opacity-30">
-                <p className="text-4xl">🕊</p>
-                <p className="text-sm font-medium italic mt-2">Aucun rappel, repose-toi bien !</p>
+
+          {/* Section Progrès Rapide ou Citations */}
+          <div className="mt-auto bg-white/40 border border-pink-milk/30 p-4 rounded-kawaii flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                <SparklesIcon size={20} className="text-pink-candy" />
               </div>
-            )}
+              <p className="text-xs md:text-sm font-medium text-hello-black/70">
+                "Le secret de la réussite, c'est de commencer avec le sourire." 🌸
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-hello-black/30 uppercase tracking-widest">Style Clean Girl ✨ Approved</span>
+            </div>
           </div>
-        </BouncyCard>
-
-        <BouncyCard delay={0.3} className="bg-lilac/20 border-lilac/30 flex flex-col items-center justify-center text-center p-8">
-          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-lilac mb-6">
-            <span className="text-4xl">⭐</span>
-          </div>
-          <h3 className="text-2xl text-lilac-dark font-satisfy mb-2">Objectif Semaine</h3>
-          <p className="text-sm text-text font-medium mb-6">Atteins 10h d'étude pour débloquer le badge "Licorne Savante" !</p>
-          <div className="w-full h-3 bg-white rounded-full overflow-hidden shadow-inner border border-lilac/20">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: '65%' }}
-              className="h-full bg-gradient-to-r from-lilac to-primary"
-            />
-          </div>
-          <p className="text-[10px] font-extrabold mt-3 text-lilac-dark uppercase tracking-widest">6.5h / 10h complétées</p>
-        </BouncyCard>
+        </div>
       </div>
     </div>
-  );
-};
-
-export default Dashboard;
+  )
+}
