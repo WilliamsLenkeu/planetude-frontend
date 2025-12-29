@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, Star, Sparkles, Coffee } from 'lucide-react'
+import { Heart, Sparkles, Coffee } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function Home() {
