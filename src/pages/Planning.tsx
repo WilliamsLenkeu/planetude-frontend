@@ -52,20 +52,56 @@ export default function Planning() {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const newPlanning = await planningService.create({
-        ...formData,
-        sessions: [] // On commence avec un planning vide
-      })
-      setPlannings([newPlanning, ...plannings])
+      // Préparation des données selon les specs de l'API
+      // On essaie d'être le plus fidèle possible aux docs
+      const payload: any = {
+        periode: formData.periode,
+        dateDebut: formData.dateDebut, // On garde le format YYYY-MM-DD qui est souvent plus sûr pour les dates sans heure
+        sessions: [] 
+      }
+
+      // Si un titre est saisi, on l'ajoute au cas où le backend le supporte
+      if (formData.title.trim()) {
+        payload.title = formData.title.trim()
+      }
+
+      console.log('Sending payload:', payload)
+      const response = await planningService.create(payload)
+      console.log('API Response:', response)
+      
+      // On gère les différents formats de réponse possibles
+      let newPlanning = null
+      if (response && (response as any).planning) {
+        newPlanning = (response as any).planning
+      } else if (response && (response as any).data && (response as any).data.planning) {
+        newPlanning = (response as any).data.planning
+      } else if (response && (response as any)._id) {
+        newPlanning = response
+      }
+
+      if (!newPlanning || (!newPlanning._id && !newPlanning.id)) {
+        console.error('Invalid response format:', response)
+        throw new Error('Le serveur a créé le planning mais le format de réponse est inattendu.')
+      }
+
+      // On s'assure d'avoir un _id pour la cohérence du reste de l'app
+      if (!newPlanning._id && newPlanning.id) {
+        newPlanning._id = newPlanning.id
+      }
+
+      setPlannings(prev => [newPlanning, ...prev])
       setIsModalOpen(false)
       toast.success('Nouveau planning créé ! ✨')
+      
       setFormData({
         title: '',
         periode: 'semaine',
         dateDebut: new Date().toISOString().split('T')[0]
       })
-    } catch (error) {
-      toast.error('Erreur lors de la création')
+    } catch (error: any) {
+      console.error('Erreur création planning:', error)
+      const errorMsg = error.message || (error.data && error.data.message) || 'Erreur lors de la création'
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
