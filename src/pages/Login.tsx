@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Lock, Mail, ArrowRight } from 'lucide-react'
+import { Lock, Mail, ArrowRight, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
@@ -33,54 +33,56 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-12 relative">
-      {/* Éléments décoratifs en arrière-plan du formulaire */}
-      <div className="absolute -top-10 -right-10 text-pink-candy/20 -z-10 rotate-12">
-        <Heart size={120} fill="currentColor" />
+    <div className="max-w-xl mx-auto mt-12 px-4 relative">
+      {/* Anneaux de classeur décoratifs */}
+      <div className="absolute left-[-20px] top-10 bottom-10 flex flex-col justify-around z-20 pointer-events-none hidden md:flex">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
+        ))}
       </div>
       
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="kawaii-card border-2 border-white/50"
+        initial={{ opacity: 0, rotate: -2 }}
+        animate={{ opacity: 1, rotate: 0 }}
+        className="notebook-page p-8 md:p-12 shadow-2xl relative"
       >
-        <div className="text-center mb-8">
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="inline-block p-4 bg-pink-milk rounded-full mb-4 shadow-inner-soft"
-          >
-            <Heart size={40} fill="#FFD1DC" className="text-pink-candy" />
-          </motion.div>
-          <h2 className="text-3xl font-bold text-hello-black sparkle inline-block">Bon retour ! 🎀</h2>
-          <p className="text-hello-black/60 mt-2">Prête pour une session tout en douceur ?</p>
+        {/* Ruban adhésif décoratif */}
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px] rotate-[-2deg] z-20" />
+
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-milk/50 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-pink-deep mb-4">
+            <Star size={12} className="fill-pink-deep" />
+            Accès Membre
+          </div>
+          <h2 className="text-4xl font-black text-hello-black italic font-serif">Bon retour !</h2>
+          <p className="text-hello-black/50 mt-2 font-display">Prête pour une session productive ?</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-hello-black mb-2 ml-2">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-candy" size={20} />
+        <form onSubmit={handleLogin} className="space-y-8 relative z-10">
+          <div className="space-y-2">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Email</label>
+            <div className="relative group">
+              <Mail className="absolute left-0 top-1/2 -translate-y-1/2 text-pink-candy group-focus-within:text-pink-deep transition-colors" size={18} />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full kawaii-input pl-12"
+                className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-3 pl-8 text-hello-black font-display placeholder:text-hello-black/20 transition-all"
                 placeholder="ton@email.com"
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-hello-black mb-2 ml-2">Mot de passe</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-candy" size={20} />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Mot de passe</label>
+            <div className="relative group">
+              <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-pink-candy group-focus-within:text-pink-deep transition-colors" size={18} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full kawaii-input pl-12"
+                className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-3 pl-8 text-hello-black font-display placeholder:text-hello-black/20 transition-all"
                 placeholder="••••••••"
                 required
               />
@@ -90,18 +92,18 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full kawaii-button flex items-center justify-center gap-2"
+            className="w-full bg-hello-black text-white py-5 rounded-none font-black uppercase tracking-[0.2em] text-xs shadow-notebook hover:translate-y-[-2px] hover:shadow-xl transition-all flex items-center justify-center gap-3"
           >
-            {isLoading ? 'Connexion...' : 'Se connecter'}
-            {!isLoading && <ArrowRight size={20} />}
+            {isLoading ? 'Identification...' : 'Ouvrir mon journal'}
+            {!isLoading && <ArrowRight size={16} />}
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-hello-black/60">
+        <div className="mt-12 text-center pt-8 border-t border-dashed border-pink-milk">
+          <p className="text-hello-black/40 text-sm font-display">
             Pas encore de compte ?{' '}
-            <Link to="/auth/register" className="text-pink-candy font-bold hover:underline">
-              Inscris-toi vite ! ✨
+            <Link to="/auth/register" className="text-pink-deep font-black uppercase tracking-widest text-[11px] hover:underline underline-offset-4">
+              Créer un carnet ✨
             </Link>
           </p>
         </div>

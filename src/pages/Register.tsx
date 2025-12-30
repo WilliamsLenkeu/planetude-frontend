@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, Lock, Sparkles, ArrowRight, Heart } from 'lucide-react'
+import { User, Mail, Lock, Sparkles, ArrowRight, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { authService } from '../services/auth.service'
@@ -35,67 +35,71 @@ export default function Register() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-8 mb-12 px-4">
+    <div className="max-w-xl mx-auto mt-8 mb-12 px-4 relative">
+      {/* Anneaux de classeur décoratifs */}
+      <div className="absolute left-[-20px] top-10 bottom-10 flex flex-col justify-around z-20 pointer-events-none hidden md:flex">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
+        ))}
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="kawaii-card bg-white border-4 border-pink-milk shadow-kawaii p-6 md:p-8"
+        initial={{ opacity: 0, rotate: 1 }}
+        animate={{ opacity: 1, rotate: 0 }}
+        className="notebook-page p-8 md:p-12 shadow-2xl relative"
       >
-        <div className="text-center mb-6">
-          <div className="inline-block p-4 bg-pink-milk rounded-full mb-4 relative">
-            <Sparkles size={32} className="text-pink-candy" />
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute -top-1 -right-1"
-            >
-              <Heart size={16} fill="#FFD1DC" className="text-pink-candy" />
-            </motion.div>
+        {/* Trombone décoratif */}
+        <div className="absolute -top-6 right-10 w-8 h-16 bg-gray-300/40 border-2 border-gray-400/20 rounded-full z-20 hidden md:block" />
+
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-milk/50 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-pink-deep mb-4">
+            <Star size={12} className="fill-pink-deep" />
+            Nouveau Carnet
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-hello-black">Bienvenue ! ✨</h2>
-          <p className="text-hello-black/60 text-sm">Prête à organiser tes études avec style ?</p>
+          <h2 className="text-4xl font-black text-hello-black italic font-serif">Bienvenue !</h2>
+          <p className="text-hello-black/50 mt-2 font-display">Prête à organiser tes études avec style ?</p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-xs font-black text-hello-black/40 uppercase tracking-widest mb-2 ml-2">Ton Nom</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-candy" size={20} />
+        <form onSubmit={handleRegister} className="space-y-6 relative z-10">
+          <div className="space-y-2">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Ton Nom</label>
+            <div className="relative group">
+              <User className="absolute left-0 top-1/2 -translate-y-1/2 text-pink-candy group-focus-within:text-pink-deep transition-colors" size={18} />
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full kawaii-input pl-12"
+                className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-3 pl-8 text-hello-black font-display placeholder:text-hello-black/20 transition-all"
                 placeholder="Ex: Sakura"
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-black text-hello-black/40 uppercase tracking-widest mb-2 ml-2">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-candy" size={20} />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Email</label>
+            <div className="relative group">
+              <Mail className="absolute left-0 top-1/2 -translate-y-1/2 text-pink-candy group-focus-within:text-pink-deep transition-colors" size={18} />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full kawaii-input pl-12"
+                className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-3 pl-8 text-hello-black font-display placeholder:text-hello-black/20 transition-all"
                 placeholder="ton@email.com"
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-black text-hello-black/40 uppercase tracking-widest mb-2 ml-2">Mot de passe</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-candy" size={20} />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Mot de passe</label>
+            <div className="relative group">
+              <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-pink-candy group-focus-within:text-pink-deep transition-colors" size={18} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full kawaii-input pl-12"
+                className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-3 pl-8 text-hello-black font-display placeholder:text-hello-black/20 transition-all"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -103,9 +107,9 @@ export default function Register() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-black text-hello-black/40 uppercase tracking-widest mb-2 ml-2">Genre (Optionnel)</label>
-            <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-3">
+            <label className="text-xs font-black text-hello-black/40 uppercase tracking-widest ml-1">Genre</label>
+            <div className="grid grid-cols-3 gap-4">
               {[
                 { val: 'F', label: 'Féminin 🎀' },
                 { val: 'M', label: 'Masculin 🌸' },
@@ -115,7 +119,7 @@ export default function Register() {
                   key={opt.val}
                   type="button"
                   onClick={() => setGender(opt.val)}
-                  className={`py-2 px-1 rounded-kawaii text-[10px] font-bold transition-all border-2 ${
+                  className={`py-3 px-1 rounded-none text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                     gender === opt.val 
                       ? 'bg-pink-candy text-white border-pink-candy shadow-sm' 
                       : 'bg-white text-hello-black/60 border-pink-milk hover:border-pink-candy/30'
@@ -130,27 +134,27 @@ export default function Register() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full kawaii-button flex items-center justify-center gap-2 mt-6 py-4"
+            className="w-full bg-hello-black text-white py-5 rounded-none font-black uppercase tracking-[0.2em] text-xs shadow-notebook hover:translate-y-[-2px] hover:shadow-xl transition-all flex items-center justify-center gap-3 mt-4"
           >
             {isLoading ? (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
               >
-                <Sparkles size={20} />
+                <Sparkles size={18} />
               </motion.div>
             ) : (
               <>
-                S'inscrire <ArrowRight size={20} />
+                S'inscrire <ArrowRight size={16} />
               </>
             )}
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-hello-black/60 text-sm">
+        <div className="mt-12 text-center pt-8 border-t border-dashed border-pink-milk">
+          <p className="text-hello-black/40 text-sm font-display">
             Déjà un compte ?{' '}
-            <Link to="/auth/login" className="text-pink-candy font-bold hover:underline">
+            <Link to="/auth/login" className="text-pink-deep font-black uppercase tracking-widest text-[11px] hover:underline underline-offset-4">
               Connecte-toi ! 🌸
             </Link>
           </p>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate, NavLink } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -64,30 +64,57 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen w-full font-quicksand text-hello-black relative flex flex-col overflow-hidden bg-[#FDFBF7]">
-      {/* Background Decor - Plus subtil et artistique */}
-      <div className="fixed top-[-15%] right-[-5%] w-[50%] h-[50%] bg-pink-candy/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
-      <div className="fixed bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-magic-purple/10 rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="fixed top-[20%] left-[5%] w-[30%] h-[30%] bg-sky-pastel/10 rounded-full blur-[80px] pointer-events-none -z-10" />
+    <div className="h-screen w-full font-quicksand text-hello-black relative flex flex-col overflow-hidden bg-clean-beige">
+      {/* Background Decor - Ambiance Clean & Sophistiquée */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-[#FDFBF7]">
+        {/* Soft Animated Gradients */}
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            rotate: [0, 45, 0],
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] bg-pink-candy/10 rounded-full blur-[140px] will-change-transform" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, -30, 0],
+          }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-cloud/20 rounded-full blur-[120px] will-change-transform" 
+        />
+        <motion.div 
+          animate={{ 
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[10%] left-[5%] w-[50%] h-[50%] bg-sage-soft/20 rounded-full blur-[110px] will-change-transform" 
+        />
+
+        {/* Subtle Texture */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
+      </div>
       
       <Toaster 
         position="top-right" 
         toastOptions={{
-          style: { borderRadius: '1rem', background: '#FFF0F5', color: '#4A4A4A', border: '2px solid #FFD1DC' }
+          className: 'glass-card border-2 border-pink-candy/30 text-hello-black font-bold',
+          style: { borderRadius: '1rem', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)' }
         }} 
       />
       
       <Header />
       
       <main className="flex-1 w-full relative overflow-hidden flex flex-col">
-        <div className="flex-1 container mx-auto px-4 py-4 md:py-6 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 container mx-auto px-4 py-6 md:py-8 overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               className="h-full"
             >
               <Routes location={location}>
@@ -152,24 +179,30 @@ function AppContent() {
   )
 }
 
-function MobileNavItem({ to, icon: Icon, label, highlight = false }: any) {
-  const location = useLocation()
-  const isActive = location.pathname === to
-
-  return (
-    <Link to={to} className="flex flex-col items-center justify-center gap-1">
-      <div className={`p-2 rounded-xl transition-all ${
-        highlight 
-          ? 'bg-gradient-to-br from-pink-candy to-pink-deep text-white shadow-kawaii -mt-8 border-4 border-white' 
-          : isActive ? 'text-pink-deep' : 'text-hello-black/40'
-      }`}>
-        <Icon size={highlight ? 24 : 20} />
-      </div>
-      {!highlight && (
-        <span className={`text-[10px] font-bold ${isActive ? 'text-pink-deep' : 'text-hello-black/40'}`}>
-          {label}
-        </span>
-      )}
-    </Link>
-  )
-}
+const MobileNavItem = ({ to, icon: Icon, label, highlight }: { to: string, icon: any, label: string, highlight?: boolean }) => (
+  <NavLink 
+    to={to} 
+    className={({ isActive }) => 
+      `flex flex-col items-center gap-1 transition-all relative ${
+        isActive 
+          ? 'text-pink-deep' 
+          : 'text-hello-black/30 hover:text-pink-candy'
+      }`
+    }
+  >
+    {({ isActive }) => (
+      <>
+        <div className={`p-2 rounded-xl transition-all ${highlight ? 'bg-pink-candy/10' : ''} ${isActive ? 'scale-110' : ''}`}>
+          <Icon size={highlight ? 24 : 20} strokeWidth={isActive ? 2.5 : 2} />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+        {isActive && (
+          <motion.div 
+            layoutId="mobileNavActive"
+            className="absolute -bottom-1 w-1 h-1 bg-pink-deep rounded-full"
+          />
+        )}
+      </>
+    )}
+  </NavLink>
+)

@@ -6,7 +6,6 @@ import { subjectService } from '../services/subject.service'
 import type { Planning as PlanningType, Subject } from '../types/index'
 import toast from 'react-hot-toast'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { Card } from '../components/ui/Card'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Planning() {
@@ -221,39 +220,90 @@ export default function Planning() {
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-hello-black">Mes Plannings 📅</h2>
-          <p className="text-sm md:text-base text-hello-black/60">Organise tes révisions avec style.</p>
+    <div className="max-w-6xl mx-auto space-y-8 md:space-y-12 relative px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="pl-4 border-l-4 border-pink-candy">
+          <h2 className="text-3xl md:text-4xl font-semibold text-hello-black font-display tracking-tight">Agenda des Révisions</h2>
+          <p className="text-base text-hello-black/40 italic font-serif">"L'organisation est la clé de la sérénité."</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="kawaii-button !py-2 !px-4 md:!py-3 md:!px-6 text-sm flex items-center gap-2 w-full md:w-auto justify-center"
+          className="kawaii-button primary !py-3 !px-8 flex items-center gap-2 shadow-notebook"
         >
-          <Plus size={18} /> Nouveau Planning
+          <Plus size={20} /> Nouveau Planning
         </button>
       </div>
 
       {safePlannings.length === 0 ? (
-        <Card className="text-center py-12">
-          <p className="text-hello-black/50 mb-4">Tu n'as pas encore de planning... 🌸</p>
+        <div className="notebook-page p-12 text-center border-l-4 border-pink-200">
+          <div className="w-20 h-20 bg-pink-milk rounded-full flex items-center justify-center mx-auto mb-6">
+            <BookOpen size={40} className="text-pink-candy/40" />
+          </div>
+          <p className="text-hello-black/40 mb-6 italic font-serif text-lg">Ton agenda est encore vierge. Prête à écrire ton succès ?</p>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="text-pink-candy font-bold hover:underline"
+            className="text-pink-candy font-semibold hover:underline decoration-2 underline-offset-4"
           >
-            Créer mon premier planning
+            Créer ma première session
           </button>
-        </Card>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {safePlannings.map((planning) => (
-            <PlanningCardItem 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {safePlannings.map((planning, index) => (
+            <motion.div
               key={planning._id}
-              planning={planning}
-              onDelete={() => handleDelete(planning._id)}
-              onDownload={(e) => handleDownload(e, planning._id, planning.title)}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ rotate: index % 2 === 0 ? -1 : 1, y: -4 }}
+              className="notebook-page p-8 flex flex-col justify-between min-h-[280px] border-l-4 border-sage-soft group"
+            >
+              <div className="pl-4">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-pink-milk text-pink-candy group-hover:scale-110 transition-transform">
+                    <CalendarIcon size={20} />
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={(e) => handleDownload(e, planning._id!, planning.title)}
+                      className="p-2 text-hello-black/20 hover:text-pink-candy transition-colors"
+                      title="Exporter en PDF"
+                    >
+                      <Download size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(planning._id!)}
+                      className="p-2 text-hello-black/20 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                <Link to={`/planning/${planning._id}`} className="block">
+                  <h3 className="text-xl font-semibold mb-3 text-hello-black group-hover:text-pink-candy transition-colors font-display">
+                    {planning.title}
+                  </h3>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center gap-2 text-sm text-hello-black/40 font-medium italic">
+                      <Clock size={14} />
+                      <span>{planning.periode === 'semaine' ? 'Hebdomadaire' : planning.periode}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-hello-black/30 font-mono uppercase tracking-widest">
+                      <Star size={12} />
+                      <span>{planning.sessions?.length || 0} sessions prévues</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              <Link 
+                to={`/planning/${planning._id}`}
+                className="mt-4 py-3 px-6 bg-pink-milk/50 text-pink-candy rounded-xl text-center text-sm font-semibold hover:bg-pink-candy hover:text-white transition-all border border-pink-candy/10"
+              >
+                Ouvrir l'agenda
+              </Link>
+            </motion.div>
           ))}
         </div>
       )}
@@ -477,54 +527,4 @@ export default function Planning() {
   )
 }
 
-function PlanningCardItem({ planning, onDelete, onDownload }: { planning: PlanningType, onDelete: () => void, onDownload: (e: React.MouseEvent) => void }) {
-  return (
-    <Link to={`/planning/${planning._id}`}>
-      <Card 
-        whileHover={{ y: -5 }}
-        className="hover:border-pink-candy transition-colors flex flex-col justify-between h-48"
-      >
-        <div>
-          <div className="flex justify-between items-start mb-2">
-            <span className="bg-pink-milk text-pink-candy text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-              {planning.periode}
-            </span>
-            <div className="flex gap-2">
-              <button 
-                onClick={onDownload}
-                className="p-1 text-hello-black/40 hover:text-pink-candy transition-colors"
-              >
-                <Download size={18} />
-              </button>
-              <button 
-                onClick={(e) => { 
-                  e.preventDefault(); 
-                  e.stopPropagation();
-                  onDelete(); 
-                }}
-                className="p-1 text-hello-black/40 hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-hello-black group-hover:text-pink-candy transition-colors">
-            {planning.title || `Planning du ${new Date(planning.createdAt).toLocaleDateString()}`}
-          </h3>
-          <p className="text-hello-black/40 text-sm mt-1">
-            Créé le {new Date(planning.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-        
-        <div className="flex justify-between items-center pt-4 border-t border-pink-milk/50">
-          <span className="text-sm font-bold text-hello-black/60">
-            {planning.sessions?.length || 0} sessions
-          </span>
-          <span className="text-pink-candy font-bold text-sm flex items-center gap-1">
-            Voir <Plus size={14} />
-          </span>
-        </div>
-      </Card>
-    </Link>
-  )
-}
+

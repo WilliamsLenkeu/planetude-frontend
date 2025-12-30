@@ -1,87 +1,121 @@
 import { Link } from 'react-router-dom'
-import { Heart, Sparkles, Coffee } from 'lucide-react'
+import { Sparkles, Coffee, BookOpen, PenTool, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center space-y-16">
+    <div className="flex flex-col items-center justify-center min-h-[85vh] py-10">
       <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "backOut" }}
-        className="relative w-full max-w-4xl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative w-full max-w-5xl"
       >
-        {/* Éléments flottants décoratifs */}
+        {/* Anneaux de classeur pour l'immersion */}
+        <div className="absolute left-10 top-0 bottom-0 flex flex-col justify-around z-20 pointer-events-none hidden lg:flex">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
+          ))}
+        </div>
+
+        {/* Décorations de bureau */}
         <motion.div 
-          animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-12 -left-8 text-pink-candy/40"
+          animate={{ rotate: [0, 5, 0] }}
+          transition={{ duration: 6, repeat: Infinity }}
+          className="absolute -top-10 -right-5 z-30 hidden md:block"
         >
-          <Heart size={80} fill="currentColor" />
-        </motion.div>
-        <motion.div 
-          animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-12 -right-8 text-magic-purple/40"
-        >
-          <Sparkles size={80} />
-        </motion.div>
-        
-        <div className="kawaii-card bg-white/40 backdrop-blur-xl border-2 border-white/60 p-12 space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-candy via-magic-purple to-pink-candy" />
-          
-          <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl font-bold text-hello-black leading-tight">
-              Étudie avec <span className="text-pink-candy sparkle">douceur</span> 🌸
-            </h1>
-            <p className="text-2xl text-hello-black/70 max-w-2xl mx-auto leading-relaxed">
-              Le compagnon idéal pour tes révisions. Gagne des badges, collectionne des cœurs et laisse <span className="text-pink-candy font-bold">PixelCoach</span> veiller sur toi.
-            </p>
+          <div className="bg-pink-candy/20 backdrop-blur-sm p-3 rounded-lg border border-pink-candy/10 shadow-sm rotate-12">
+            <PenTool size={32} className="text-pink-deep" />
           </div>
+        </motion.div>
+
+        <div className="notebook-page p-8 md:p-16 relative overflow-hidden shadow-2xl mx-4">
+          {/* Ligne de marge rouge style cahier */}
+          <div className="absolute left-20 top-0 bottom-0 w-[2px] bg-pink-candy/20 hidden md:block" />
           
-          <div className="flex flex-wrap justify-center gap-6 pt-4">
-            <Link to="/auth/register" className="kawaii-button text-xl px-12 py-4 shadow-lg hover:shadow-pink-candy/40">
-              Commencer l'aventure ✨
-            </Link>
-            <Link to="/auth/login" className="bg-white/60 backdrop-blur-md border-2 border-pink-candy/30 text-hello-black font-bold py-4 px-12 rounded-kawaii-lg hover:bg-pink-milk transition-all duration-300">
-              Se connecter
-            </Link>
+          <div className="relative z-10 space-y-12 md:pl-16">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-milk/50 border border-pink-candy/10 text-pink-deep text-sm font-black uppercase tracking-widest">
+                <Star size={14} className="fill-pink-deep" />
+                Planétude
+              </div>
+              
+              <h1 className="text-5xl md:text-8xl font-black text-hello-black leading-[1.1] tracking-tight">
+                Ton journal de <br />
+                <span className="text-pink-candy italic font-serif">réussite.</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-hello-black/60 max-w-2xl leading-relaxed font-display">
+                L'esthétique <span className="text-pink-deep underline decoration-pink-candy/30 underline-offset-4">Clean Girl</span> rencontre l'IA pour transformer ta façon d'apprendre. Doux, organisé, et incroyablement efficace.
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap gap-6">
+              <Link 
+                to="/auth/register" 
+                className="bg-hello-black text-white px-10 py-5 rounded-none shadow-notebook hover:translate-y-[-4px] hover:shadow-2xl transition-all duration-300 font-black uppercase tracking-widest text-sm"
+              >
+                Ouvrir mon carnet ✨
+              </Link>
+              <Link 
+                to="/auth/login" 
+                className="bg-white border-2 border-hello-black text-hello-black px-10 py-5 rounded-none hover:bg-pink-milk transition-all duration-300 font-black uppercase tracking-widest text-sm"
+              >
+                Se connecter
+              </Link>
+            </div>
+
+            {/* Citations style Post-it */}
+            <div className="absolute bottom-10 right-10 hidden xl:block">
+              <motion.div 
+                whileHover={{ rotate: 0 }}
+                className="bg-yellow-100/80 p-6 shadow-sm rotate-3 border-t-4 border-yellow-200 w-48"
+              >
+                <p className="font-serif italic text-yellow-800 text-sm">
+                  "Le succès est la somme de petits efforts répétés jour après jour."
+                </p>
+              </motion.div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-5xl px-4">
         <FeatureCard 
-          icon={<Sparkles className="text-pink-candy" />}
+          icon={<Sparkles className="text-pink-deep" />}
           title="PixelCoach IA"
-          description="Ton assistant adorable qui t'aide à planifier tes révisions sans stress."
+          description="Ton coach personnel qui comprend tes besoins et adapte ton planning avec douceur."
+          rotate="-1deg"
         />
         <FeatureCard 
-          icon={<Heart className="text-pink-candy" />}
-          title="Récompenses"
-          description="Gagne des badges et collectionne des cœurs en restant productive."
+          icon={<BookOpen className="text-pink-deep" />}
+          title="Organisation"
+          description="Une vision claire de tes sujets, devoirs et rappels dans une interface apaisante."
+          rotate="1deg"
         />
         <FeatureCard 
-          icon={<Coffee className="text-hello-black" />}
+          icon={<Coffee className="text-pink-deep" />}
           title="Zen Mode"
-          description="Une interface douce et sans distractions pour une concentration maximale."
+          description="Focalise-toi sur l'essentiel avec nos ambiances LoFi intégrées pour tes sessions."
+          rotate="-0.5deg"
         />
       </div>
     </div>
   )
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+function FeatureCard({ icon, title, description, rotate }: { icon: React.ReactNode, title: string, description: string, rotate: string }) {
   return (
     <motion.div 
-      whileHover={{ y: -5 }}
-      className="kawaii-card flex flex-col items-center text-center p-8 bg-pink-milk/50 border-2 border-pink-candy/20"
+      whileHover={{ y: -10, rotate: 0 }}
+      style={{ rotate }}
+      className="bg-white p-10 shadow-notebook border-l-4 border-pink-candy flex flex-col items-center text-center space-y-4"
     >
-      <div className="mb-4 p-3 bg-white rounded-full shadow-sm">
+      <div className="p-4 bg-pink-milk/30 rounded-full">
         {icon}
       </div>
-      <h3 className="text-xl font-bold mb-2 text-hello-black">{title}</h3>
-      <p className="text-hello-black/60">{description}</p>
+      <h3 className="text-xl font-black text-hello-black uppercase tracking-wider">{title}</h3>
+      <p className="text-hello-black/60 font-display leading-relaxed">{description}</p>
     </motion.div>
   )
 }

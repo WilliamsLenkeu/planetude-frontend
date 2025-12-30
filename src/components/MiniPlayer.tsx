@@ -1,91 +1,137 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Music, X, Volume2 } from 'lucide-react';
+import { Play, Pause, Music, X, Volume2, Maximize2 } from 'lucide-react';
 import { useMusic } from '../contexts/MusicContext';
 import { Link } from 'react-router-dom';
 
 export default function MiniPlayer() {
-  const { currentTrack, isPlaying, togglePlay, stop, volume, setVolume } = useMusic();
+  const { currentTrack, isPlaying, togglePlay, stop, volume, setVolume, currentTime, duration, seek } = useMusic();
 
   if (!currentTrack) return null;
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-kawaii border-2 border-pink-candy/30 min-w-[300px]"
+        initial={{ y: 100, opacity: 0, scale: 0.9 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 100, opacity: 0, scale: 0.9 }}
+        whileHover={{ y: -5 }}
+        className="fixed bottom-6 right-6 z-50 flex flex-col bg-white p-5 shadow-notebook border-l-4 border-pink-candy min-w-[340px] group"
       >
-        {/* Thumbnail/Icon */}
-        <Link to="/lofi" className="relative group">
-          <div className="w-12 h-12 bg-pink-milk rounded-xl flex items-center justify-center overflow-hidden border-2 border-pink-candy/20">
-            {currentTrack.thumbnail ? (
-              <img src={currentTrack.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-            ) : (
-              <Music className="text-pink-candy" size={20} />
-            )}
-          </div>
-          <div className="absolute inset-0 bg-pink-candy/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-            <Music size={16} className="text-white" />
-          </div>
-        </Link>
+        {/* Paper Tape Decorative */}
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px] z-10 rotate-[-1deg]" />
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-hello-black truncate leading-tight">
-            {currentTrack.title}
-          </p>
-          <p className="text-[10px] font-medium text-pink-candy uppercase tracking-wider">
-            {currentTrack.category}
-          </p>
+        {/* Progress Bar - Subtle Notebook Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-pink-milk/50 overflow-hidden">
+          <motion.div 
+            className="h-full bg-pink-candy"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ type: "spring", bounce: 0, duration: 0.2 }}
+          />
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            value={currentTime}
+            onChange={(e) => seek(parseFloat(e.target.value))}
+            className="absolute inset-0 w-full opacity-0 cursor-pointer z-20"
+          />
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          {/* Volume Slider Simple */}
-          <div className="group relative flex items-center">
-            <Volume2 size={16} className="text-hello-black/40 group-hover:text-pink-candy transition-colors" />
-            <div className="absolute bottom-full right-0 mb-2 p-2 bg-white rounded-lg shadow-kawaii border border-pink-milk opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-              <input 
-                type="range" 
-                min="0" 
-                max="1" 
-                step="0.01" 
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-24 h-1 bg-pink-milk rounded-full appearance-none cursor-pointer accent-pink-candy"
-              />
+        <div className="flex items-center gap-5 mt-2">
+          {/* Thumbnail - Polaroid Style */}
+          <Link to="/lofi" className="relative group/thumb shrink-0">
+            <motion.div 
+              animate={isPlaying ? { rotate: [0, 2, -2, 0] } : {}}
+              transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+              className="w-16 h-16 bg-white p-1.5 shadow-sm border border-pink-milk/30 rotate-[-2deg]"
+            >
+              <div className="w-full h-full bg-pink-milk/20 overflow-hidden relative">
+                {currentTrack.thumbnail ? (
+                  <img src={currentTrack.thumbnail} alt="" className="w-full h-full object-cover grayscale-[20%]" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-pink-candy/20">
+                    <Music size={20} />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0 py-1">
+            <p className="text-base font-black text-hello-black truncate leading-tight font-display">
+              {currentTrack.title}
+            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[9px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">
+                {currentTrack.category || "Studio Session"}
+              </p>
+              <span className="text-[9px] font-black text-hello-black/30 tracking-widest">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
             </div>
           </div>
 
-          <button 
-            onClick={togglePlay}
-            className="w-10 h-10 bg-pink-candy text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm"
-          >
-            {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
-          </button>
+          {/* Controls */}
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={togglePlay}
+              className="w-12 h-12 bg-hello-black text-white flex items-center justify-center hover:bg-pink-candy transition-all shadow-notebook active:translate-y-0.5"
+            >
+              {isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" className="ml-1" />}
+            </button>
 
-          <button 
-            onClick={stop}
-            className="p-1.5 text-hello-black/20 hover:text-kitty-red transition-colors"
-          >
-            <X size={18} />
-          </button>
+            <div className="flex flex-col gap-1 ml-1">
+              <Link 
+                to="/lofi"
+                className="p-1.5 text-hello-black/20 hover:text-pink-candy transition-colors"
+                title="Plein écran"
+              >
+                <Maximize2 size={16} />
+              </Link>
+              <button 
+                onClick={stop}
+                className="p-1.5 text-hello-black/20 hover:text-pink-candy transition-colors"
+                title="Fermer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Animation Bars (Visible quand joue) */}
-        {isPlaying && (
-          <div className="absolute -top-1 -right-1 flex gap-0.5 items-end h-4">
-            {[1, 2, 3].map(i => (
-              <motion.div
-                key={i}
-                animate={{ height: [4, 12, 4] }}
-                transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.2 }}
-                className="w-1 bg-pink-candy rounded-full"
-              />
-            ))}
+        {/* Volume - Only visible on hover */}
+        <motion.div 
+          initial={{ height: 0, opacity: 0, marginTop: 0 }}
+          whileHover={{ height: 'auto', opacity: 1, marginTop: 16 }}
+          className="overflow-hidden flex items-center gap-4 border-t border-pink-milk/20"
+        >
+          <Volume2 size={14} className="text-pink-deep/30 shrink-0 mt-3" />
+          <div className="flex-1 h-0.5 bg-pink-milk/30 relative mt-3">
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.01" 
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <motion.div 
+              className="h-full bg-pink-candy/50"
+              style={{ width: `${volume * 100}%` }}
+            />
           </div>
-        )}
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

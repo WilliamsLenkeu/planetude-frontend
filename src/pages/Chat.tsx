@@ -100,85 +100,107 @@ export default function Chat() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col h-full relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 -z-10 opacity-20 rotate-12">
-        <Sparkles size={120} className="text-pink-candy" />
+    <div className="max-w-5xl mx-auto h-full flex flex-col relative overflow-hidden pb-4">
+      {/* Diary Header Style */}
+      <div className="flex items-center justify-between mb-6 shrink-0 px-4 md:px-0">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-pink-candy rounded-full flex items-center justify-center shadow-lg border-2 border-white floating-animation">
+            <Cat size={28} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-hello-black font-display flex items-center gap-3">
+              PixelCoach
+              <span className="h-2 w-2 rounded-full bg-sage-soft animate-pulse shadow-[0_0_8px_rgba(183,228,199,0.8)]" />
+            </h1>
+            <p className="text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Confidences & Conseils</p>
+          </div>
+        </div>
+        <div className="hidden md:block h-[1px] flex-1 mx-8 bg-gradient-to-r from-pink-candy/20 to-transparent" />
       </div>
 
-      {/* Header du Chat */}
-      <div className="flex items-center gap-4 mb-4 bg-white/40 backdrop-blur-md p-4 rounded-kawaii border-2 border-white/60 shadow-kawaii shrink-0">
-        <div className="bg-gradient-to-br from-pink-candy to-pink-deep p-3 rounded-full shadow-lg floating-animation">
-          <Cat size={24} className="text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-hello-black flex items-center gap-2">
-            PixelCoach
-            <span className="flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-          </h1>
-          <p className="text-xs text-hello-black/60 font-medium">Toujours là pour t'encourager ✨</p>
-        </div>
-      </div>
-
-      {/* Zone des messages */}
-      <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-4 mb-4">
-        <AnimatePresence initial={false}>
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] md:max-w-[75%] p-4 rounded-2xl shadow-sm ${
-                  message.sender === 'user'
-                    ? 'bg-pink-candy text-hello-black rounded-tr-none border-2 border-white'
-                    : 'bg-white/80 text-hello-black rounded-tl-none border-2 border-pink-milk'
-                }`}
-              >
-                <div className="prose prose-pink prose-sm max-w-none">
-                  <ReactMarkdown>{message.text}</ReactMarkdown>
-                </div>
-                <div className={`text-[10px] mt-2 opacity-50 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </motion.div>
+      {/* Diary Page Container */}
+      <div className="flex-1 relative flex flex-col min-h-0">
+        {/* Binder Rings Simulation for the diary page */}
+        <div className="absolute left-[-1.5rem] top-10 bottom-10 flex flex-col justify-around z-20 pointer-events-none hidden md:flex">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
           ))}
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
-            >
-              <div className="bg-white/80 p-4 rounded-2xl rounded-tl-none border-2 border-pink-milk">
-                <Loader2 className="animate-spin text-pink-candy" size={20} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div ref={messagesEndRef} />
-      </div>
+        </div>
 
-      {/* Input */}
-      <div className="p-4 bg-white/60 backdrop-blur-md rounded-kawaii border-2 border-white shadow-kawaii shrink-0 mb-2">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Écris-moi quelque chose de doux... ✨"
-            className="flex-1 bg-white/50 border-2 border-pink-milk/50 rounded-full px-6 py-3 focus:outline-none focus:border-pink-candy transition-colors text-sm"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="kawaii-button !p-3 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={20} />
-          </button>
+        <div className="flex-1 notebook-page p-6 md:p-10 flex flex-col min-h-0 shadow-2xl">
+          {/* Zone des messages - with paper line texture already in notebook-page */}
+          <div className="flex-1 overflow-y-auto px-4 custom-scrollbar space-y-8 mb-6 relative z-10">
+            <AnimatePresence initial={false}>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] md:max-w-[70%] relative group ${
+                      message.sender === 'user'
+                        ? 'bg-white p-6 shadow-notebook rotate-[0.5deg] border-l-4 border-pink-candy'
+                        : 'bg-pink-milk/20 p-6 shadow-sm border border-pink-milk/30 italic font-serif text-lg'
+                    }`}
+                  >
+                    {/* Message Content */}
+                    <div className={`prose prose-sm max-w-none font-display ${message.sender === 'coach' ? 'text-pink-deep/80' : 'text-hello-black/80'}`}>
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                    </div>
+
+                    {/* Timestamp as a subtle handwritten note */}
+                    <div className={`text-[9px] mt-4 font-black uppercase tracking-widest opacity-30 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+
+                    {/* Tape Decorative for user messages */}
+                    {message.sender === 'user' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-6 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px] rotate-[-2deg]" />
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-pink-milk/10 p-4 rounded-full border border-pink-milk/20">
+                    <Loader2 className="animate-spin text-pink-candy" size={20} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Handwritten Style Input Area */}
+          <div className="relative z-10 pt-6 border-t border-pink-milk/20">
+            <div className="flex gap-4 items-center bg-white/50 p-2 rounded-full border border-pink-milk/30 shadow-inner">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Confie-toi à PixelCoach... ✨"
+                className="flex-1 bg-transparent px-6 py-3 focus:outline-none font-display text-lg text-hello-black placeholder:text-pink-deep/20"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="w-12 h-12 bg-hello-black text-white rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pink-candy transition-all shadow-lg hover:scale-105 active:scale-95"
+              >
+                <Send size={20} />
+              </button>
+            </div>
+            <div className="mt-2 px-6 flex justify-between items-center">
+              <span className="text-[9px] font-black text-pink-deep/20 uppercase tracking-[0.3em]">Écrit avec amour par PixelCoach</span>
+              <Sparkles size={14} className="text-pink-candy opacity-20" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

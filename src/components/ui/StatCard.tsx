@@ -18,13 +18,17 @@ export function StatCard({
   className = ''
 }: StatCardProps) {
   return (
-    <div className={`kawaii-card bg-white text-center space-y-2 border-2 border-pink-milk ${className}`}>
-      <div className={`${color} w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4`}>
+    <div className={`notebook-page p-6 text-center space-y-2 border-l-4 border-pink-candy ${className}`}>
+      <div className={`${color} w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-white/50`}>
         {icon}
       </div>
-      <p className="text-[10px] md:text-sm font-bold text-hello-black/40 uppercase tracking-wider">{label}</p>
-      <p className="text-xl md:text-3xl font-black text-hello-black">{value}</p>
-      {subValue && <p className="text-[10px] md:text-xs text-pink-candy font-bold">{subValue}</p>}
+      <p className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.2em]">{label}</p>
+      <p className="text-2xl font-black text-hello-black font-display">{value}</p>
+      {subValue && (
+        <p className="text-[10px] text-pink-deep/40 font-black uppercase tracking-widest italic">
+          {subValue}
+        </p>
+      )}
     </div>
   )
 }
