@@ -2,44 +2,45 @@ import { Link, useLocation } from 'react-router-dom'
 import { Heart, Sparkles, LayoutDashboard, Calendar, Trophy, User, Music, Palette, BookOpen } from 'lucide-react'
 import { motion } from 'framer-motion'
 
+const NAV_ITEMS = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/planning', label: 'Planning', icon: Calendar },
+  { path: '/progress', label: 'Progrès', icon: Trophy },
+  { path: '/lofi', label: 'LoFi', icon: Music },
+  { path: '/subjects', label: 'Matières', icon: BookOpen },
+  { path: '/themes', label: 'Thèmes', icon: Palette },
+]
+
 export default function Header() {
   const location = useLocation()
   
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/planning', label: 'Planning', icon: Calendar },
-    { path: '/progress', label: 'Progrès', icon: Trophy },
-    { path: '/lofi', label: 'LoFi', icon: Music },
-    { path: '/subjects', label: 'Matières', icon: BookOpen },
-    { path: '/themes', label: 'Thèmes', icon: Palette },
-  ]
-
   return (
-    <header className="w-full sticky top-0 z-50 px-4 pt-4 md:px-8 md:pt-6 pointer-events-none shrink-0">
-      <div className="max-w-7xl mx-auto h-20 md:h-24 glass-card border-2 border-white/60 shadow-glass px-6 md:px-10 flex items-center justify-between pointer-events-auto">
-        <Link to="/" className="flex items-center gap-4 group">
+    <header className="w-full sticky top-0 z-50 px-2 pt-2 md:px-8 md:pt-6 pointer-events-none shrink-0">
+      <div className="max-w-7xl mx-auto h-16 md:h-24 glass-card border-2 border-white/60 shadow-glass px-4 md:px-10 flex items-center justify-between pointer-events-auto">
+        <Link to="/" className="flex items-center gap-3 md:gap-4 group">
           <motion.div 
             whileHover={{ scale: 1.1, rotate: -8 }}
-            className="bg-gradient-to-br from-pink-candy to-pink-deep p-3 rounded-2xl shadow-kawaii border-2 border-white"
+            className="bg-gradient-to-br from-pink-candy to-pink-deep p-2 md:p-3 rounded-xl md:rounded-2xl shadow-kawaii border-2 border-white"
           >
-            <Heart size={26} fill="white" className="text-white" />
+            <Heart size={18} fill="white" className="text-white md:hidden" />
+            <Heart size={26} fill="white" className="text-white hidden md:block" />
           </motion.div>
           <div className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-bold text-hello-black tracking-tight font-display">
+            <h1 className="text-lg md:text-3xl font-bold text-hello-black tracking-tight font-display">
               PlanÉtude
             </h1>
-            <div className="flex items-center gap-1.5 -mt-1">
-              <span className="text-[10px] uppercase tracking-[0.3em] text-pink-deep font-black">
+            <div className="flex items-center gap-1 -mt-1 md:gap-1.5">
+              <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-pink-deep font-black">
                 Studio
               </span>
-              <Sparkles size={10} className="text-pink-candy animate-pulse" />
+              <Sparkles size={8} className="text-pink-candy animate-pulse md:size-[10px]" />
             </div>
           </div>
         </Link>
         
         <nav className="flex items-center gap-4 md:gap-8">
           <div className="hidden lg:flex items-center gap-1 bg-pink-milk/30 p-1.5 rounded-2xl border border-white/40">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Link 
                 key={item.path}
                 to={item.path} 
@@ -62,13 +63,13 @@ export default function Header() {
             ))}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <Link 
               to="/chat" 
-              className="kawaii-button !py-2.5 !px-5 flex items-center gap-2 group"
+              className="kawaii-button !py-1.5 !px-3 md:!py-2.5 md:!px-5 flex items-center gap-2 group"
             >
               <div className="relative">
-                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                <Sparkles size={16} className="md:size-[18px] group-hover:rotate-12 transition-transform" />
               </div>
               <span className="hidden sm:inline">Coach IA</span>
             </Link>
@@ -87,9 +88,9 @@ export default function Header() {
             {/* Mobile Profile Icon */}
             <Link 
               to="/profile" 
-              className="md:hidden p-2.5 rounded-xl bg-pink-milk border border-pink-candy/20 text-pink-deep shadow-sm"
+              className="md:hidden p-2 rounded-lg bg-pink-milk/50 border border-pink-candy/10 text-pink-deep"
             >
-              <User size={20} />
+              <User size={18} />
             </Link>
           </div>
         </nav>

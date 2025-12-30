@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react'
 import type { User } from '../types'
 
 type AuthContextValue = {
@@ -71,8 +71,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = !!token
 
+  const value = useMemo(() => ({
+    token,
+    user,
+    setAuth,
+    logout,
+    isAuthenticated,
+    isInitializing
+  }), [token, user, isInitializing])
+
   return (
-    <AuthContext.Provider value={{ token, user, setAuth, logout, isAuthenticated, isInitializing }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

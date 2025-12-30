@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import type { ThemeConfig } from '../types';
 
@@ -48,8 +48,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     applyTheme(config);
   };
 
+  const value = useMemo(() => ({
+    themeConfig,
+    updateThemeConfig
+  }), [themeConfig]);
+
   return (
-    <ThemeContext.Provider value={{ themeConfig, updateThemeConfig }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

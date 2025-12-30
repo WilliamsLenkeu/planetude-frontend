@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import type { LoFiTrack } from '../types';
 
 interface MusicContextType {
@@ -32,21 +32,21 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     audio.volume = volume;
   }, [volume, audio]);
 
-  const nextTrack = () => {
+  const nextTrack = useCallback(() => {
     if (playlist.length === 0 || !currentTrack) return;
     const currentIndex = playlist.findIndex(t => t.url === currentTrack.url);
     const nextIndex = (currentIndex + 1) % playlist.length;
     setCurrentTrack(playlist[nextIndex]);
     setIsPlaying(true);
-  };
+  }, [playlist, currentTrack]);
 
-  const prevTrack = () => {
+  const prevTrack = useCallback(() => {
     if (playlist.length === 0 || !currentTrack) return;
     const currentIndex = playlist.findIndex(t => t.url === currentTrack.url);
     const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
     setCurrentTrack(playlist[prevIndex]);
     setIsPlaying(true);
-  };
+  }, [playlist, currentTrack]);
 
   useEffect(() => {
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -68,7 +68,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [audio, playlist, currentTrack]);
+  }, [audio, playlist, nextTrack]);
 
   useEffect(() => {
     if (currentTrack?.url) {
@@ -88,48 +88,62 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isPlaying, currentTrack]);
 
-  const playTrack = (track: LoFiTrack) => {
+  const playTrack = useCallback((track: LoFiTrack) => {
     if (currentTrack?.url === track.url) {
-      togglePlay();
+      setIsPlaying(prev => !prev);
     } else {
       setCurrentTrack(track);
       setIsPlaying(true);
     }
-  };
+  }, [currentTrack]);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     setIsPlaying(false);
     setCurrentTrack(null);
     audio.pause();
     audio.src = "";
     setCurrentTime(0);
-  };
+  }, [audio]);
 
-  const seek = (time: number) => {
+  const seek = useCallback((time: number) => {
     audio.currentTime = time;
     setCurrentTime(time);
-  };
+  }, [audio]);
+
+  const value = useMemo(() => ({ 
+    currentTrack, 
+    isPlaying, 
+    playTrack, 
+    togglePlay, 
+    stop,
+    nextTrack,
+    prevTrack,
+    volume,
+    setVolume,
+    currentTime,
+    duration,
+    seek,
+    setPlaylist
+  }), [
+    currentTrack, 
+    isPlaying, 
+    playTrack, 
+    togglePlay, 
+    stop, 
+    nextTrack, 
+    prevTrack, 
+    volume, 
+    currentTime, 
+    duration, 
+    seek
+  ]);
 
   return (
-    <MusicContext.Provider value={{ 
-      currentTrack, 
-      isPlaying, 
-      playTrack, 
-      togglePlay, 
-      stop,
-      nextTrack,
-      prevTrack,
-      volume,
-      setVolume,
-      currentTime,
-      duration,
-      seek,
-      setPlaylist
-    }}>
+    <MusicContext.Provider value={value}>
       {children}
     </MusicContext.Provider>
   );

@@ -102,17 +102,17 @@ export default function Chat() {
   return (
     <div className="max-w-5xl mx-auto h-full flex flex-col relative overflow-hidden pb-4">
       {/* Diary Header Style */}
-      <div className="flex items-center justify-between mb-6 shrink-0 px-4 md:px-0">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-pink-candy rounded-full flex items-center justify-center shadow-lg border-2 border-white floating-animation">
-            <Cat size={28} className="text-white" />
+      <div className="flex items-center justify-between mb-4 md:mb-6 shrink-0 px-4 md:px-0">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="w-10 h-10 md:w-14 md:h-14 bg-pink-candy rounded-full flex items-center justify-center shadow-lg border-2 border-white floating-animation shrink-0">
+            <Cat className="size-5 md:size-[28px] text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-hello-black font-display flex items-center gap-3">
+            <h1 className="text-xl md:text-2xl font-semibold text-hello-black font-display flex items-center gap-2 md:gap-3">
               PixelCoach
               <span className="h-2 w-2 rounded-full bg-sage-soft animate-pulse shadow-[0_0_8px_rgba(183,228,199,0.8)]" />
             </h1>
-            <p className="text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Confidences & Conseils</p>
+            <p className="text-[8px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Confidences & Conseils</p>
           </div>
         </div>
         <div className="hidden md:block h-[1px] flex-1 mx-8 bg-gradient-to-r from-pink-candy/20 to-transparent" />
@@ -127,9 +127,9 @@ export default function Chat() {
           ))}
         </div>
 
-        <div className="flex-1 notebook-page p-6 md:p-10 flex flex-col min-h-0 shadow-2xl">
+        <div className="flex-1 notebook-page p-4 md:p-10 flex flex-col min-h-0 shadow-2xl">
           {/* Zone des messages - with paper line texture already in notebook-page */}
-          <div className="flex-1 overflow-y-auto px-4 custom-scrollbar space-y-8 mb-6 relative z-10">
+          <div className="flex-1 overflow-y-auto px-2 md:px-4 custom-scrollbar space-y-6 md:space-y-8 mb-4 md:mb-6 relative z-10">
             <AnimatePresence initial={false}>
               {messages.map((message) => (
                 <motion.div
@@ -139,10 +139,10 @@ export default function Chat() {
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] md:max-w-[70%] relative group ${
+                    className={`max-w-[90%] md:max-w-[70%] relative group ${
                       message.sender === 'user'
-                        ? 'bg-white p-6 shadow-notebook rotate-[0.5deg] border-l-4 border-pink-candy'
-                        : 'bg-pink-milk/20 p-6 shadow-sm border border-pink-milk/30 italic font-serif text-lg'
+                        ? 'bg-white p-4 md:p-6 shadow-notebook rotate-[0.5deg] border-l-4 border-pink-candy'
+                        : 'bg-pink-milk/20 p-4 md:p-6 shadow-sm border border-pink-milk/30 italic font-serif text-base md:text-lg'
                     }`}
                   >
                     {/* Message Content */}
@@ -151,7 +151,7 @@ export default function Chat() {
                     </div>
 
                     {/* Timestamp as a subtle handwritten note */}
-                    <div className={`text-[9px] mt-4 font-black uppercase tracking-widest opacity-30 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    <div className={`text-[8px] md:text-[9px] mt-3 md:mt-4 font-black uppercase tracking-widest opacity-30 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
 
@@ -178,26 +178,26 @@ export default function Chat() {
           </div>
 
           {/* Handwritten Style Input Area */}
-          <div className="relative z-10 pt-6 border-t border-pink-milk/20">
-            <div className="flex gap-4 items-center bg-white/50 p-2 rounded-full border border-pink-milk/30 shadow-inner">
+          <div className="relative z-10 pt-4 md:pt-6 border-t border-pink-milk/20">
+            <div className="flex gap-2 md:gap-4 items-center bg-white/50 p-1.5 md:p-2 rounded-full border border-pink-milk/30 shadow-inner">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Confie-toi à PixelCoach... ✨"
-                className="flex-1 bg-transparent px-6 py-3 focus:outline-none font-display text-lg text-hello-black placeholder:text-pink-deep/20"
+                placeholder="Confie-toi... ✨"
+                className="flex-1 bg-transparent px-4 md:px-6 py-2 md:py-3 focus:outline-none font-display text-base md:text-lg text-hello-black placeholder:text-pink-deep/20"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
-                className="w-12 h-12 bg-hello-black text-white rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pink-candy transition-all shadow-lg hover:scale-105 active:scale-95"
+                className="w-10 h-10 md:w-12 md:h-12 bg-hello-black text-white rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pink-candy transition-all shadow-lg hover:scale-105 active:scale-95 shrink-0"
               >
-                <Send size={20} />
+                <Send className="size-4 md:size-5" />
               </button>
             </div>
-            <div className="mt-2 px-6 flex justify-between items-center">
-              <span className="text-[9px] font-black text-pink-deep/20 uppercase tracking-[0.3em]">Écrit avec amour par PixelCoach</span>
+            <div className="mt-2 px-4 md:px-6 flex justify-between items-center">
+              <span className="text-[8px] md:text-[9px] font-black text-pink-deep/20 uppercase tracking-[0.3em]">Fait avec amour ✨</span>
               <Sparkles size={14} className="text-pink-candy opacity-20" />
             </div>
           </div>

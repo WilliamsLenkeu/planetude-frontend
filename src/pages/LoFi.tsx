@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Music, Play, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { lofiService } from '../services/lofi.service'
 import { useMusic } from '../contexts/MusicContext'
 import type { LoFiTrack } from '../types'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+
+const BINDER_RINGS_LOFI = [1, 2, 3, 4, 5, 6]
 
 export default function LoFi() {
   const { 
@@ -49,15 +51,15 @@ export default function LoFi() {
       }
     }
     fetchTracks()
-  }, [])
+  }, [setPlaylist])
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = useMemo(() => duration > 0 ? (currentTime / duration) * 100 : 0, [currentTime, duration]);
 
-  const formatTime = (time: number) => {
+  const formatTime = useCallback((time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
   if (isLoading) return <LoadingSpinner />
 
@@ -67,7 +69,7 @@ export default function LoFi() {
       <div className="relative">
         {/* Binder Rings Simulation */}
         <div className="hidden md:flex absolute left-[-2rem] top-12 bottom-12 flex-col justify-around z-20">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {BINDER_RINGS_LOFI.map((i) => (
             <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm shadow-inner" />
           ))}
         </div>
@@ -75,46 +77,46 @@ export default function LoFi() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="notebook-page p-8 md:p-12 flex flex-col md:flex-row items-center gap-12 min-h-[450px]"
+          className="notebook-page p-6 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12 min-h-[400px] md:min-h-[450px]"
         >
           {/* Polaroid-style Thumbnail */}
-          <div className="relative z-10">
+          <div className="relative z-10 shrink-0">
             <motion.div 
               animate={isPlaying ? { rotate: [0, 1, -1, 0] } : {}}
               transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-              className="w-64 h-72 bg-white p-4 shadow-xl border border-pink-milk/20 rotate-[-2deg] relative group"
+              className="w-48 h-56 md:w-64 md:h-72 bg-white p-3 md:p-4 shadow-xl border border-pink-milk/20 -rotate-1 md:rotate-[-2deg] relative group"
             >
-              <div className="w-full h-56 bg-gray-50 overflow-hidden mb-4 relative">
+              <div className="w-full h-40 md:h-56 bg-gray-50 overflow-hidden mb-3 md:mb-4 relative">
                 {currentTrack?.thumbnail ? (
                   <img src={currentTrack.thumbnail} alt={currentTrack.title} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-pink-candy/20">
-                    <Music size={64} />
+                    <Music size={48} className="md:size-[64px]" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-40" />
               </div>
-              <div className="text-center font-display text-pink-deep/60 italic text-sm">
+              <div className="text-center font-display text-pink-deep/60 italic text-xs md:text-sm truncate px-2">
                 {currentTrack?.title || "Sélectionne une piste..."}
               </div>
               {/* Paper Clip Decorative */}
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-12 bg-gray-300/40 rounded-full border-2 border-gray-400/30 rotate-12 backdrop-blur-sm" />
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-10 md:w-8 md:h-12 bg-gray-300/40 rounded-full border-2 border-gray-400/30 rotate-12 backdrop-blur-sm" />
             </motion.div>
           </div>
 
-          <div className="flex-1 space-y-8 pl-0 md:pl-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="h-[1px] w-8 bg-pink-candy/40" />
-                <span className="text-pink-deep/60 text-xs font-black uppercase tracking-[0.3em] font-sans">
+          <div className="flex-1 space-y-6 md:space-y-8 w-full md:pl-8">
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-4">
+                <span className="h-[1px] w-6 md:w-8 bg-pink-candy/40" />
+                <span className="text-pink-deep/60 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] font-sans">
                   {currentTrack?.category || "Studio LoFi"}
                 </span>
               </div>
-              <h2 className="text-4xl md:text-6xl font-semibold text-hello-black leading-tight font-display mb-4">
+              <h2 className="text-3xl md:text-6xl font-semibold text-hello-black leading-tight font-display mb-2 md:mb-4">
                 {currentTrack?.title || "Moment de Calme"}
               </h2>
-              <p className="text-hello-black/40 italic text-xl font-serif">
-                "Trouve ton rythme, écris ton histoire... 🌸"
+              <p className="text-hello-black/30 italic text-lg md:text-xl font-serif">
+                "Trouve ton rythme, écris ton histoire..."
               </p>
             </div>
 

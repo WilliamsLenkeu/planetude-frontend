@@ -1,26 +1,29 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate, NavLink } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { MusicProvider } from './contexts/MusicContext'
 import Header from './components/Header'
-import MiniPlayer from './components/MiniPlayer'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LayoutDashboard, Calendar, Sparkles, Trophy, User, LogOut, Heart } from 'lucide-react'
+import { LayoutDashboard, Calendar, Sparkles, Trophy, User, LogOut } from 'lucide-react'
+import { LoadingSpinner } from './components/ui/LoadingSpinner'
 
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Planning from './pages/Planning'
-import PlanningDetail from './pages/PlanningDetail'
-import Chat from './pages/Chat'
-import Progress from './pages/Progress'
-import Reminders from './pages/Reminders'
-import Profile from './pages/Profile'
-import LoFi from './pages/LoFi'
-import Subjects from './pages/Subjects'
-import Themes from './pages/Themes'
+// Lazy Loading des pages pour optimiser le poids du bundle initial
+const Home = lazy(() => import('./pages/Home'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Planning = lazy(() => import('./pages/Planning'))
+const PlanningDetail = lazy(() => import('./pages/PlanningDetail'))
+const Chat = lazy(() => import('./pages/Chat'))
+const Progress = lazy(() => import('./pages/Progress'))
+const Reminders = lazy(() => import('./pages/Reminders'))
+const Profile = lazy(() => import('./pages/Profile'))
+const LoFi = lazy(() => import('./pages/LoFi'))
+const Subjects = lazy(() => import('./pages/Subjects'))
+const Themes = lazy(() => import('./pages/Themes'))
+const MiniPlayer = lazy(() => import('./components/MiniPlayer'))
 
 export default function App() {
   return (
@@ -47,20 +50,7 @@ function AppContent() {
 
   // Splash screen pendant l'initialisation
   if (isInitializing) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="w-16 h-16 bg-pink-candy rounded-full flex items-center justify-center shadow-kawaii border-4 border-white"
-          >
-            <Heart size={32} fill="white" className="text-white" />
-          </motion.div>
-          <p className="text-pink-deep font-bold animate-pulse">Chargement... ✨</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner fullScreen message="PlanÉtude s'éveille... ✨" />
   }
 
   return (
@@ -107,7 +97,7 @@ function AppContent() {
       <Header />
       
       <main className="flex-1 w-full relative overflow-hidden flex flex-col">
-        <div className="flex-1 container mx-auto px-4 py-6 md:py-8 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 container mx-auto px-2 py-4 md:px-4 md:py-8 overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -117,38 +107,44 @@ function AppContent() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="h-full"
             >
-              <Routes location={location}>
-                {!isAuthenticated ? (
-                  // STACK NON-AUTHENTIFIÉ
-                  <>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/auth/login" element={<Login />} />
-                    <Route path="/auth/register" element={<Register />} />
-                    <Route path="*" element={<Navigate to="/auth/login" replace />} />
-                  </>
-                ) : (
-                  // STACK AUTHENTIFIÉ
-                  <>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/planning" element={<Planning />} />
-                    <Route path="/planning/:id" element={<PlanningDetail />} />
-                    <Route path="/chat" element={<Chat />} />
-                    <Route path="/progress" element={<Progress />} />
-                    <Route path="/reminders" element={<Reminders />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/lofi" element={<LoFi />} />
-                    <Route path="/subjects" element={<Subjects />} />
-                    <Route path="/themes" element={<Themes />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                  </>
-                )}
-              </Routes>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes location={location}>
+                  {!isAuthenticated ? (
+                    // STACK NON-AUTHENTIFIÉ
+                    <>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/auth/login" element={<Login />} />
+                      <Route path="/auth/register" element={<Register />} />
+                      <Route path="*" element={<Navigate to="/auth/login" replace />} />
+                    </>
+                  ) : (
+                    // STACK AUTHENTIFIÉ
+                    <>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/planning" element={<Planning />} />
+                      <Route path="/planning/:id" element={<PlanningDetail />} />
+                      <Route path="/chat" element={<Chat />} />
+                      <Route path="/progress" element={<Progress />} />
+                      <Route path="/reminders" element={<Reminders />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/lofi" element={<LoFi />} />
+                      <Route path="/subjects" element={<Subjects />} />
+                      <Route path="/themes" element={<Themes />} />
+                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    </>
+                  )}
+                </Routes>
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </div>
 
         {/* Mini Player global - Uniquement sur PC */}
-        {isAuthenticated && <MiniPlayer />}
+        {isAuthenticated && (
+          <Suspense fallback={null}>
+            <MiniPlayer />
+          </Suspense>
+        )}
       </main>
 
       {/* Logout button (Desktop) */}
@@ -167,7 +163,7 @@ function AppContent() {
 
       {/* Mobile Nav */}
       {isAuthenticated && (
-        <nav className="md:hidden h-16 bg-white/80 backdrop-blur-md border-t border-pink-milk flex items-center justify-around px-4 pb-safe">
+        <nav className="md:hidden h-14 bg-white/90 backdrop-blur-lg border-t border-pink-milk/50 flex items-center justify-around px-2 pb-safe">
           <MobileNavItem to="/dashboard" icon={LayoutDashboard} label="Home" />
           <MobileNavItem to="/planning" icon={Calendar} label="Plan" />
           <MobileNavItem to="/chat" icon={Sparkles} label="Coach" highlight />
@@ -183,23 +179,25 @@ const MobileNavItem = ({ to, icon: Icon, label, highlight }: { to: string, icon:
   <NavLink 
     to={to} 
     className={({ isActive }) => 
-      `flex flex-col items-center gap-1 transition-all relative ${
+      `flex flex-col items-center justify-center transition-all relative py-1 px-3 rounded-xl ${
         isActive 
           ? 'text-pink-deep' 
-          : 'text-hello-black/30 hover:text-pink-candy'
+          : 'text-hello-black/20 hover:text-pink-candy'
       }`
     }
   >
     {({ isActive }) => (
       <>
-        <div className={`p-2 rounded-xl transition-all ${highlight ? 'bg-pink-candy/10' : ''} ${isActive ? 'scale-110' : ''}`}>
-          <Icon size={highlight ? 24 : 20} strokeWidth={isActive ? 2.5 : 2} />
+        <div className={`transition-all ${isActive ? 'scale-110' : ''}`}>
+          <Icon size={highlight ? 22 : 18} strokeWidth={isActive ? 2.5 : 2} className={highlight && !isActive ? 'text-pink-candy/60' : ''} />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+        <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-40'}`}>
+          {label}
+        </span>
         {isActive && (
           <motion.div 
-            layoutId="mobileNavActive"
-            className="absolute -bottom-1 w-1 h-1 bg-pink-deep rounded-full"
+            layoutId="mobile-nav-dot"
+            className="absolute -bottom-1 w-1 h-1 bg-pink-candy rounded-full"
           />
         )}
       </>
