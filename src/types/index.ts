@@ -12,8 +12,10 @@ export interface User {
   avatar?: string;
   gender?: string;
   preferences?: {
-    themes: string[];
-    matieres: string[];
+    themes?: string[];
+    matieres?: string[];
+    currentTheme?: string;
+    unlockedThemes?: string[];
   };
   themeConfig?: ThemeConfig;
 }

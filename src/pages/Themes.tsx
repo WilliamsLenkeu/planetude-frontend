@@ -27,9 +27,12 @@ export default function Themes() {
         setThemes(themesList)
         
         const userData = (profileData as any).data || profileData
+        
+        // Utiliser preferences.unlockedThemes selon la structure du document
         if (userData && userData.preferences) {
-          setOwnedThemeKeys(userData.preferences.themes || [])
+          setOwnedThemeKeys(userData.preferences.unlockedThemes || [])
         }
+        
         setActiveThemeKey(userData.preferences?.currentTheme || 'default-pink')
       } catch (error) {
         console.error('Erreur thèmes:', error)
