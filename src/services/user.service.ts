@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Stats, Badge, User } from '../types/index';
+import type { Badge, User } from '../types/index';
 
 export const userService = {
   getProfile: async () => {
