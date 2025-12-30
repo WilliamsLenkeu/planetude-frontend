@@ -4,6 +4,7 @@ import { User, Mail, Lock, Sparkles, ArrowRight, Heart } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { authService } from '../services/auth.service'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Register() {
   const [name, setName] = useState('')
@@ -11,6 +12,7 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [gender, setGender] = useState('F')
   const [isLoading, setIsLoading] = useState(false)
+  const { setAuth } = useAuth()
   const navigate = useNavigate()
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -18,12 +20,13 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      await authService.register({ name, email, password, gender })
+      const data = await authService.register({ name, email, password, gender })
 
+      setAuth(data.token, data.user)
       toast.success('Compte créé avec succès ! Bienvenue 🌸', {
         icon: '🎀',
       })
-      navigate('/auth/login')
+      navigate('/dashboard')
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de l\'inscription')
     } finally {

@@ -1,3 +1,10 @@
+export interface ThemeConfig {
+  primaryColor: string;
+  backgroundColor: string;
+  secondaryColor?: string;
+  fontFamily?: string;
+}
+
 export interface User {
   _id: string;
   email: string;
@@ -8,6 +15,7 @@ export interface User {
     themes: string[];
     matieres: string[];
   };
+  themeConfig?: ThemeConfig;
 }
 
 export interface Stats {
@@ -51,6 +59,72 @@ export interface Badge {
   description: string;
   awardedAt?: string;
   icon?: string; // Gardé pour compatibilité UI
+}
+
+export interface LoFiTrack {
+  _id: string;
+  title: string;
+  url: string;
+  category: string;
+  thumbnail?: string;
+}
+
+export interface Subject {
+  _id: string;
+  name: string;
+  color: string;
+  icon?: string;
+  totalStudyTime?: number;
+}
+
+export interface ProgressSession {
+  subjectId: string;
+  durationMinutes: number;
+  notes?: string;
+  date?: string;
+  xpGained?: number;
+}
+
+export interface ProgressSummary {
+  totalXP: number;
+  level: number;
+  xpToNextLevel: number;
+  rank: string;
+}
+
+export interface GlobalStats {
+  totalStudyTime: number;
+  averageSessionDuration: number;
+  mostStudiedSubject: string;
+  streakDays: number;
+  completionRate?: number;
+}
+
+export interface SubjectStats {
+  subject: string;
+  minutes: number;
+  color: string;
+}
+
+export interface Theme {
+  _id?: string;
+  key: string;
+  name: string;
+  priceXP?: number;
+  price?: number; // Compatibilité
+  previewUrl?: string;
+  config?: {
+    primaryColor: string;
+    secondaryColor?: string;
+    backgroundColor: string;
+    fontFamily: string;
+  };
+  colors?: { // Compatibilité
+    primary: string;
+    secondary: string;
+    background: string;
+    accent: string;
+  };
 }
 
 export interface ApiResponse<T> {

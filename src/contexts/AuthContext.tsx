@@ -4,7 +4,7 @@ import type { User } from '../types'
 type AuthContextValue = {
   token: string | null
   user: User | null
-  setToken: (t: string | null) => void
+  setAuth: (token: string | null, user: User | null) => void
   logout: () => void
   isAuthenticated: boolean
   isInitializing: boolean
@@ -29,13 +29,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await fetch('https://plan-etude.koyeb.app/api/user/profile', {
+        const response = await fetch('https://plan-etude.koyeb.app/api/users/profile', {
           headers: { Authorization: `Bearer ${storedToken}` },
         })
         
         if (response.ok) {
-          const data = await response.json()
-          setUser(data)
+          const result = await response.json()
+          // L'API renvoie souvent { success: true, data: user }
+          const userData = result.data || result
+          setUser(userData)
           setTokenState(storedToken)
         } else {
           // Si le token est invalide (401, 404, etc.)
@@ -45,7 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (error) {
         console.error('Erreur initialisation auth:', error)
-        // En cas d'erreur réseau, on garde le token mais on arrête l'initialisation
       } finally {
         setIsInitializing(false)
       }
@@ -54,24 +55,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth()
   }, [])
 
-  const setToken = (t: string | null) => {
+  const setAuth = (t: string | null, u: User | null) => {
     if (t) {
       localStorage.setItem('token', t)
     } else {
       localStorage.removeItem('token')
     }
     setTokenState(t)
+    setUser(u)
   }
 
   const logout = () => {
-    setToken(null)
-    setUser(null)
+    setAuth(null, null)
   }
 
   const isAuthenticated = !!token
 
   return (
-    <AuthContext.Provider value={{ token, user, setToken, logout, isAuthenticated, isInitializing }}>
+    <AuthContext.Provider value={{ token, user, setAuth, logout, isAuthenticated, isInitializing }}>
       {children}
     </AuthContext.Provider>
   )

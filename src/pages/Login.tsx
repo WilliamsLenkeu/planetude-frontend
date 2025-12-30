@@ -10,7 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { setToken } = useAuth()
+  const { setAuth } = useAuth()
   const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export default function Login() {
     try {
       const data = await authService.login({ email, password })
 
-      setToken(data.token)
+      setAuth(data.token, data.user)
       toast.success('Bon retour parmi nous ! 🌸', {
         icon: '🎀',
       })

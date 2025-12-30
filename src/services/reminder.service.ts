@@ -1,16 +1,25 @@
 import { api } from './api';
 
 export interface Reminder {
-  id: string;
+  _id: string;
   title: string;
-  time: string;
+  date: string;
+  planningId?: string;
 }
 
 export const reminderService = {
   getAll: async () => {
-    return api.get<Reminder[]>('/reminders');
+    const response = await api.get<any>('/reminders');
+    return response?.data || response || [];
   },
-  create: async (data: any) => {
-    return api.post<Reminder>('/reminders', data);
+  create: async (data: Partial<Reminder>) => {
+    const response = await api.post<any>('/reminders', data);
+    return response?.data || response;
+  },
+  update: async (id: string, data: Partial<Reminder>) => {
+    return api.put<{ success: boolean; message: string }>(`/reminders/${id}`, data);
+  },
+  delete: async (id: string) => {
+    return api.delete(`/reminders/${id}`);
   }
 };

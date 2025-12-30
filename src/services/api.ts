@@ -23,6 +23,22 @@ class ApiService {
     return this.handleResponse<T>(response);
   }
 
+  async getBlob(path: string): Promise<Blob> {
+    const response = await fetch(`${API_URL}${path}`, {
+      method: 'GET',
+      headers: this.headers,
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw {
+        status: response.status,
+        message: data?.message || 'Erreur lors du téléchargement',
+        data
+      };
+    }
+    return response.blob();
+  }
+
   async post<T>(path: string, body: any): Promise<T> {
     const response = await fetch(`${API_URL}${path}`, {
       method: 'POST',

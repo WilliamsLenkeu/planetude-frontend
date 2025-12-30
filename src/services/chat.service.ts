@@ -6,5 +6,8 @@ export const chatService = {
   },
   getHistory: async () => {
     return api.get<any[]>('/chat/history');
+  },
+  getMetrics: async () => {
+    return api.get<{ success: boolean; data: { totalMessages: number; lastInteraction: string } }>('/chat/metrics');
   }
 };

@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { MusicProvider } from './contexts/MusicContext'
 import Header from './components/Header'
+import MiniPlayer from './components/MiniPlayer'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LayoutDashboard, Calendar, Sparkles, Trophy, User, LogOut, Heart } from 'lucide-react'
 
@@ -15,13 +18,20 @@ import Chat from './pages/Chat'
 import Progress from './pages/Progress'
 import Reminders from './pages/Reminders'
 import Profile from './pages/Profile'
+import LoFi from './pages/LoFi'
+import Subjects from './pages/Subjects'
+import Themes from './pages/Themes'
 
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ThemeProvider>
+        <MusicProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </MusicProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }
@@ -54,10 +64,11 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen w-full font-quicksand text-hello-black relative flex flex-col overflow-hidden bg-pink-milk/10">
-      {/* Background Decor */}
-      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-pink-candy/10 rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-magic-purple/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+    <div className="h-screen w-full font-quicksand text-hello-black relative flex flex-col overflow-hidden bg-[#FDFBF7]">
+      {/* Background Decor - Plus subtil et artistique */}
+      <div className="fixed top-[-15%] right-[-5%] w-[50%] h-[50%] bg-pink-candy/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
+      <div className="fixed bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-magic-purple/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+      <div className="fixed top-[20%] left-[5%] w-[30%] h-[30%] bg-sky-pastel/10 rounded-full blur-[80px] pointer-events-none -z-10" />
       
       <Toaster 
         position="top-right" 
@@ -98,9 +109,9 @@ function AppContent() {
                     <Route path="/progress" element={<Progress />} />
                     <Route path="/reminders" element={<Reminders />} />
                     <Route path="/profile" element={<Profile />} />
-                    {/* Redirige les anciennes pages d'auth vers le dashboard */}
-                    <Route path="/auth/*" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/lofi" element={<LoFi />} />
+                    <Route path="/subjects" element={<Subjects />} />
+                    <Route path="/themes" element={<Themes />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </>
                 )}
@@ -108,6 +119,9 @@ function AppContent() {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        {/* Mini Player global - Uniquement sur PC */}
+        {isAuthenticated && <MiniPlayer />}
       </main>
 
       {/* Logout button (Desktop) */}

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, Star } from 'lucide-react'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, Star, Play } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { planningService } from '../services/planning.service'
+import { progressService } from '../services/progress.service'
 import type { Planning, Session } from '../types/index'
 import toast from 'react-hot-toast'
 
@@ -10,22 +11,67 @@ export default function PlanningDetail() {
   const { id } = useParams()
   const [data, setData] = useState<{ planning: Planning, sessions: Session[] } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const fetchData = async () => {
+    if (!id) return
+    try {
+      const result = await planningService.getById(id)
+      setData({ planning: result, sessions: result.sessions || [] })
+    } catch (error) {
+      console.error('Erreur detail planning:', error)
+      toast.error('Impossible de charger les détails du planning')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return
-      try {
-        const result = await planningService.getById(id)
-        setData({ planning: result, sessions: result.sessions || [] })
-      } catch (error) {
-        console.error('Erreur detail planning:', error)
-        toast.error('Impossible de charger les détails du planning')
-      } finally {
-        setIsLoading(false)
-      }
-    }
     fetchData()
   }, [id])
+
+  const handleExport = async (type: 'pdf' | 'ical') => {
+    if (!id || !data) return
+    setIsExporting(true)
+    try {
+      const blob = type === 'pdf' 
+        ? await planningService.exportPDF(id)
+        : await planningService.exportICal(id)
+      
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `planning-${data.planning.title || 'export'}.${type === 'pdf' ? 'pdf' : 'ics'}`)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode?.removeChild(link)
+      toast.success(`Export ${type.toUpperCase()} réussi ! ✨`)
+    } catch (error) {
+      toast.error('Erreur lors de l\'export')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleStartSession = async (session: Session) => {
+    try {
+      // On utilise session.matiere comme ID car c'est ce qui est renvoyé par le backend dans les sessions du planning
+      // Le backend attend un subjectId dans progressService.recordSession
+      const duration = session.duration || 25
+      const response = await progressService.recordSession({
+        subjectId: session.matiere, // session.matiere contient l'ID de la matière
+        durationMinutes: duration,
+        notes: `Session de planning: ${session.title || 'Sans titre'}`
+      })
+      
+      toast.success(`Session terminée ! +${(response as any).data?.xpGained || 15} XP ✨`)
+      
+      // On rafraîchit les données pour voir le changement de statut si le backend le gère
+      await fetchData()
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors du démarrage')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -56,10 +102,18 @@ export default function PlanningDetail() {
       </div>
 
       <div className="flex flex-wrap gap-4">
-        <button className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors">
+        <button 
+          onClick={() => handleExport('pdf')}
+          disabled={isExporting}
+          className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors disabled:opacity-50"
+        >
           <FileText size={18} /> Export PDF
         </button>
-        <button className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors">
+        <button 
+          onClick={() => handleExport('ical')}
+          disabled={isExporting}
+          className="bg-white border-2 border-pink-candy text-hello-black font-bold py-2 px-6 rounded-kawaii-lg flex items-center gap-2 hover:bg-pink-milk transition-colors disabled:opacity-50"
+        >
           <Calendar size={18} /> Export iCal
         </button>
       </div>
@@ -77,7 +131,7 @@ export default function PlanningDetail() {
           ) : (
             sessions.map((session, index) => (
               <motion.div
-                key={session._id}
+                key={session._id || index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -98,17 +152,20 @@ export default function PlanningDetail() {
                   <div>
                     <span className="text-xs font-bold text-pink-candy uppercase tracking-widest">{session.matiere}</span>
                     <h4 className="text-xl font-bold text-hello-black">
-                      {session.title || `Session ${new Date(session.debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {session.title || (session.debut ? `Session de ${new Date(session.debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Prévue')}
                     </h4>
                   </div>
                   
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2 text-hello-black/60 font-semibold">
-                      <Clock size={18} /> {session.duration || 0} min
+                      <Clock size={18} /> {session.duration || 25} min
                     </div>
                     {session.statut !== 'termine' && (
-                      <button className="kawaii-button py-2 px-4 text-sm">
-                        Démarrer ✨
+                      <button 
+                        onClick={() => handleStartSession(session)}
+                        className="kawaii-button py-2 px-4 text-sm flex items-center gap-2"
+                      >
+                        <Play size={14} /> Démarrer ✨
                       </button>
                     )}
                   </div>

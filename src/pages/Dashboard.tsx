@@ -3,15 +3,17 @@ import { Heart, Star, Trophy, Clock, ArrowRight, Sparkles as SparklesIcon, Calen
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { userService } from '../services/user.service'
+import { progressService } from '../services/progress.service'
+import { statsService } from '../services/stats.service'
 import { useAuth } from '../contexts/AuthContext'
-import type { Stats } from '../types/index'
+import type { GlobalStats, ProgressSummary } from '../types/index'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { StatCard } from '../components/ui/StatCard'
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [summary, setSummary] = useState<ProgressSummary | null>(null)
+  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // On extrait le prénom pour une interaction plus naturelle
@@ -19,27 +21,31 @@ export default function Dashboard() {
 
   // Valeurs par défaut sécurisées
   const safeStats = {
-    level: stats?.gamification?.level ?? 1,
-    xp: stats?.gamification?.xp ? (stats.gamification.xp % 100) : 0,
-    streak: stats?.gamification?.streak ?? 0,
-    totalStudyTime: stats?.gamification?.totalStudyTime ?? 0,
-    completionRate: stats?.completionRate ?? 0,
+    level: summary?.level ?? 1,
+    xp: summary?.totalXP ? (summary.totalXP % 100) : 0,
+    streak: globalStats?.streakDays ?? 0,
+    totalStudyTime: globalStats?.totalStudyTime ?? 0,
+    completionRate: globalStats?.completionRate ?? 0,
     hearts: 5
   }
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const data = await userService.getStats()
-        setStats(data)
+        const [summaryData, statsData] = await Promise.all([
+          progressService.getSummary(),
+          statsService.getGlobalStats()
+        ])
+        setSummary((summaryData as any).data || summaryData)
+        setGlobalStats((statsData as any).data || statsData)
       } catch (error) {
-        console.error('Erreur stats:', error)
+        console.error('Erreur dashboard:', error)
         toast.error('Impossible de charger les statistiques')
       } finally {
         setIsLoading(false)
       }
     }
-    fetchStats()
+    fetchData()
   }, [])
 
   if (isLoading) return <LoadingSpinner />
