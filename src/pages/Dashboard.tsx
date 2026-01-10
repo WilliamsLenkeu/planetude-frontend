@@ -1,223 +1,255 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Heart, Star, Trophy, Clock, ArrowRight, Sparkles as SparklesIcon, Calendar } from 'lucide-react'
+import { useMemo } from 'react'
+import { Heart, Star, Trophy, Clock, ArrowRight, Calendar, Book, Music, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import toast from 'react-hot-toast'
+import { Link, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { progressService } from '../services/progress.service'
 import { statsService } from '../services/stats.service'
 import { useAuth } from '../contexts/AuthContext'
-import type { GlobalStats, ProgressSummary } from '../types/index'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 
-const BINDER_RINGS = [1, 2, 3, 4, 5]
-
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { user } = useAuth()
-  const [summary, setSummary] = useState<ProgressSummary | null>(null)
-  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['progress-summary'],
+    queryFn: progressService.getSummary
+  })
+
+  const { data: globalStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['global-stats'],
+    queryFn: statsService.getGlobalStats
+  })
+
+  const isLoading = summaryLoading || statsLoading
 
   // On extrait le prénom pour une interaction plus naturelle - Memoized
   const firstName = useMemo(() => user?.name?.split(' ')[0] || 'ma belle', [user?.name])
 
   // Valeurs par défaut sécurisées - Memoized
   const safeStats = useMemo(() => ({
-    level: summary?.level ?? 1,
-    xp: summary?.totalXP ? (summary.totalXP % 100) : 0,
+    level: globalStats?.level ?? summary?.level ?? 1,
+    xp: globalStats?.xp ? (globalStats.xp % 100) : (summary?.totalXP ? (summary.totalXP % 100) : 0),
     streak: globalStats?.streakDays ?? 0,
     totalStudyTime: globalStats?.totalStudyTime ?? 0,
     completionRate: globalStats?.completionRate ?? 0,
     hearts: 5
   }), [summary, globalStats])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [summaryData, statsData] = await Promise.all([
-          progressService.getSummary(),
-          statsService.getGlobalStats()
-        ])
-        setSummary((summaryData as any).data || summaryData)
-        setGlobalStats((statsData as any).data || statsData)
-      } catch (error) {
-        console.error('Erreur dashboard:', error)
-        toast.error('Impossible de charger les statistiques')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
-
   if (isLoading) return <LoadingSpinner />
   
   return (
-    <div className="h-full flex flex-col gap-8 md:gap-10 relative max-w-7xl mx-auto w-full px-4">
-      {/* Header : Bienvenue & Niveau */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 shrink-0 relative">
-        {/* Binder Rings Simulation */}
-        <div className="hidden md:flex absolute left-[-2rem] top-10 bottom-10 flex-col justify-around z-20">
-          {BINDER_RINGS.map((i) => (
-            <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm shadow-inner" />
-          ))}
-        </div>
-
+    <div className="min-h-screen relative overflow-hidden  pb-20">
+      {/* Background Decorative Elements - Plus subtils et organiques */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="md:col-span-8 notebook-page p-6 md:p-12 flex flex-col justify-center overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-8 md:p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
-            <SparklesIcon size={160} className="text-hello-black md:size-[200px]" />
-          </div>
-          
-          <div className="relative z-10 md:pl-8">
-            <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-pink-candy/10 rounded-full flex items-center justify-center border border-pink-candy/20 shrink-0">
-                <Heart size={20} className="text-pink-candy md:size-[24px]" />
-              </div>
-              <h1 className="text-2xl md:text-5xl font-semibold text-hello-black tracking-tight font-display">
-                Journal de <span className="text-pink-candy">{firstName}</span>.
-              </h1>
-            </div>
-            <p className="text-hello-black/40 text-base md:text-xl font-medium max-w-xl leading-relaxed italic font-serif">
-              "La discipline est la forme la plus pure de l'amour propre." ✨
-            </p>
-          </div>
-        </motion.div>
-
+          animate={{ 
+            scale: [1, 1.1, 1],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-15%] left-[-10%] w-[60%] h-[60%] bg-pink-milk/30 rounded-full blur-[140px]" 
+        />
         <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-          className="md:col-span-4 notebook-page p-6 md:p-8 flex flex-col justify-center gap-6 md:gap-8 border-l-4 border-blue-200"
-        >
-          <div className="flex items-center gap-4 md:gap-6 md:pl-8">
-            <div className="w-14 h-14 md:w-16 md:h-16 bg-clean-white rounded-full flex items-center justify-center border-2 border-pink-milk shadow-inner relative shrink-0">
-              <span className="text-xl md:text-2xl font-semibold text-hello-black font-display">{safeStats.level}</span>
-              <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-soft-gold rounded-full flex items-center justify-center text-white shadow-sm border border-white">
-                <Star className="size-2.5 md:size-3" fill="currentColor" />
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] md:text-[11px] font-bold text-hello-black/30 uppercase tracking-[0.2em] mb-0.5">Chapitre</p>
-              <h3 className="text-lg md:text-xl font-semibold text-hello-black">Niveau {safeStats.level}</h3>
-            </div>
-          </div>
-
-          <div className="space-y-3 md:space-y-4 md:pl-8">
-            <div className="flex justify-between items-end">
-              <span className="text-[9px] md:text-[10px] font-bold text-hello-black/20 uppercase tracking-widest italic">Expérience accumulée</span>
-              <span className="text-[10px] md:text-xs font-semibold text-hello-black/40 font-mono">{safeStats.xp}%</span>
-            </div>
-            <div className="h-1 bg-pink-milk/60 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${safeStats.xp}%` }}
-                className="h-full bg-pink-candy rounded-full"
-              />
-            </div>
-          </div>
-        </motion.div>
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, -8, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-15%] right-[-10%] w-[60%] h-[60%] bg-blue-cloud/20 rounded-full blur-[140px]" 
+        />
       </div>
 
-      {/* Main Content : Stats & Actions */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-8 min-h-0">
-        {/* Colonne Stats Latérale (3/12) */}
-        <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 md:flex md:flex-col gap-4 md:gap-6">
-          <div className="notebook-page p-5 md:p-8 flex flex-col gap-1 md:gap-2 border-l-4 border-sage-soft">
-            <div className="flex items-center gap-2 md:gap-3 text-hello-black/40 mb-1 md:mb-2 md:pl-4">
-              <Clock className="size-4 md:size-[18px]" />
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Focus</span>
-            </div>
-            <p className="text-xl md:text-2xl font-semibold text-hello-black md:pl-4">{Math.floor(safeStats.totalStudyTime / 60)}h {safeStats.totalStudyTime % 60}m</p>
-          </div>
-          
-          <div className="notebook-page p-5 md:p-8 flex flex-col gap-1 md:gap-2 border-l-4 border-soft-gold">
-            <div className="flex items-center gap-2 md:gap-3 text-hello-black/40 mb-1 md:mb-2 md:pl-4">
-              <Star className="size-4 md:size-[18px]" />
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Série</span>
-            </div>
-            <p className="text-xl md:text-2xl font-semibold text-hello-black md:pl-4">{safeStats.streak} jours</p>
-          </div>
+      <div className="max-w-7xl mx-auto pt-8 px-4 md:px-8 relative z-10 space-y-8">
+        {/* Header : Bienvenue - Design 2.0 */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-8 bg-white/40 backdrop-blur-xl rounded-[3.5rem] p-10 border border-white relative overflow-hidden group shadow-2xl shadow-black/[0.02]"
+          >
+            <div className="absolute -top-32 -right-32 w-96 h-96 bg-pink-milk/20 rounded-full blur-3xl transition-transform duration-1000 group-hover:scale-125" />
+            
+            <div className="relative z-10 space-y-6">
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white/60 backdrop-blur-md rounded-full border border-white shadow-sm">
+                <div className="w-2 h-2 bg-pink-candy rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-pink-deep uppercase tracking-[0.2em]">Dashboard</span>
+              </div>
+              
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-6xl font-black text-hello-black tracking-tight leading-[0.9]">
+                  Hello, <br />
+                  <span className="text-pink-deep italic font-serif font-normal">{firstName}.</span>
+                </h1>
+                
+                <p className="text-lg text-hello-black/40 font-medium max-w-lg leading-relaxed italic">
+                  "Chaque petit pas est une victoire vers la version la plus éclatante de toi-même." ✨
+                </p>
+              </div>
 
-          <div className="notebook-page p-5 md:p-8 flex flex-col gap-1 md:gap-2 border-l-4 border-pink-200">
-            <div className="flex items-center gap-2 md:gap-3 text-hello-black/40 mb-1 md:mb-2 md:pl-4">
-              <Heart className="size-4 md:size-[18px]" />
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Énergie</span>
+              <div className="flex pt-4">
+                <motion.button
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/planning')}
+                  className="bg-hello-black text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl shadow-hello-black/10 hover:bg-pink-deep hover:text-hello-black transition-colors duration-500"
+                >
+                  Continuer l'aventure
+                  <ArrowRight size={20} />
+                </motion.button>
+              </div>
             </div>
-            <p className="text-xl md:text-2xl font-semibold text-hello-black md:pl-4">{safeStats.hearts}/5</p>
-          </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-4 bg-white/60 backdrop-blur-xl rounded-[3.5rem] p-10 border border-white flex flex-col justify-between relative overflow-hidden group shadow-2xl shadow-black/[0.02]"
+          >
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-pink-milk/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-pink-candy/10 shadow-sm group-hover:rotate-6 transition-transform duration-500">
+                <Trophy className="text-pink-deep" size={28} strokeWidth={1.5} />
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-pink-deep/40 uppercase tracking-[0.3em] block mb-1">Niveau</span>
+                <p className="text-5xl font-black text-hello-black tracking-tighter">{safeStats.level}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 relative z-10">
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <span className="text-[10px] font-bold text-hello-black/40 uppercase tracking-[0.3em]">Progression XP</span>
+                  <span className="text-sm font-black text-pink-deep">{safeStats.xp}%</span>
+                </div>
+                <div className="h-3 bg-white/50 rounded-full overflow-hidden border border-white p-0.5 shadow-inner">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${safeStats.xp}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-pink-candy to-pink-deep rounded-full"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-hello-black/40 font-bold text-center uppercase tracking-[0.2em] leading-relaxed italic">
+                Bientôt au niveau <span className="text-pink-deep">{safeStats.level + 1}</span> 🌸
+              </p>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Colonne Actions (9/12) */}
-        <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {/* Action Card : Planning */}
-          <motion.div 
-            whileHover={{ rotate: -1, y: -4 }}
-            className="notebook-page p-8 md:p-10 flex flex-col justify-between border-l-4 border-pink-300 group"
-          >
-            <div className="md:pl-6">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl flex items-center justify-center text-pink-candy mb-4 md:mb-8 shadow-sm border border-pink-milk group-hover:rotate-12 transition-transform">
-                <Calendar className="size-5 md:size-6" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-semibold mb-2 md:mb-4 text-hello-black font-display">Mon Agenda</h3>
-              <p className="text-hello-black/40 font-medium mb-6 md:mb-10 leading-relaxed text-xs md:text-sm italic font-serif">
-                Planifie tes rêves, une session à la fois. Ton futur s'écrit ici.
-              </p>
-            </div>
+        {/* Stats Grid - Plus aéré */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatItem 
+            icon={<Star className="text-orange-400" size={24} />}
+            label="Série"
+            value={`${safeStats.streak} j`}
+            delay={0.2}
+          />
+          <StatItem 
+            icon={<Clock className="text-pink-deep" size={24} />}
+            label="Focus"
+            value={`${Math.round(safeStats.totalStudyTime / 60)}h`}
+            delay={0.3}
+          />
+          <StatItem 
+            icon={<Heart className="text-pink-candy" size={24} />}
+            label="Objectifs"
+            value={`${safeStats.completionRate}%`}
+            delay={0.4}
+          />
+          <Link to="/planning" className="block h-full group">
+            <StatItem 
+              icon={<Calendar className="text-hello-black group-hover:rotate-12 transition-transform" size={24} />}
+              label="Planning"
+              value="Voir"
+              delay={0.5}
+              isAction
+            />
+          </Link>
+        </div>
 
-            <Link to="/planning" className="kawaii-button primary w-full mx-auto max-w-[200px] h-10 md:h-12 text-sm md:text-base">
-              <span>Consulter</span>
-              <ArrowRight size={16} />
-            </Link>
-          </motion.div>
-
-          {/* Action Card : AI Coach */}
-          <motion.div 
-            whileHover={{ rotate: 1, y: -4 }}
-            className="notebook-page p-8 md:p-10 flex flex-col justify-between border-l-4 border-blue-300 group"
-          >
-            <div className="md:pl-6">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl flex items-center justify-center text-blue-cloud mb-4 md:mb-8 shadow-sm border border-blue-cloud group-hover:-rotate-12 transition-transform">
-                <SparklesIcon className="size-5 md:size-6 text-hello-black/40" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-semibold mb-2 md:mb-4 text-hello-black font-display">PixelCoach</h3>
-              <p className="text-hello-black/40 font-medium mb-6 md:mb-10 leading-relaxed text-xs md:text-sm italic font-serif">
-                Un petit mot d'encouragement ou une question ? Je suis là.
-              </p>
-            </div>
-
-            <Link to="/chat" className="kawaii-button w-full mx-auto max-w-[200px] h-10 md:h-12 text-sm md:text-base">
-              <span>Échanger</span>
-              <SparklesIcon size={16} />
-            </Link>
-          </motion.div>
-
-          {/* Bottom Bar Stats */}
-          <div className="md:col-span-2 notebook-page p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 border-l-4 border-sage-soft">
-            <div className="flex items-center gap-4 md:gap-6 md:pl-6">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-sage-soft shrink-0">
-                <Trophy className="size-5 md:size-[22px] text-hello-black/30" />
-              </div>
-              <div>
-                <p className="text-[9px] md:text-[10px] font-bold text-hello-black/20 uppercase tracking-widest mb-0.5">Note de session</p>
-                <p className="text-base md:text-lg font-semibold text-hello-black">{safeStats.completionRate}% de réussite.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-6 md:gap-8 md:pr-6">
-              <div className="text-center md:text-right">
-                <p className="text-[9px] md:text-[10px] font-bold text-hello-black/20 uppercase tracking-[0.2em] font-mono">2024 ED.</p>
-                <p className="text-[10px] md:text-xs font-semibold text-pink-candy mt-1 italic opacity-60">PlanÉtude Studio.</p>
-              </div>
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-pink-milk flex items-center justify-center shrink-0">
-                <Heart className="size-4 md:size-[18px] text-pink-candy/40" />
-              </div>
-            </div>
-          </div>
+        {/* Quick Actions Grid - Cards plus grandes et plus belles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ActionCard 
+            onClick={() => navigate('/subjects')}
+            icon={<Book size={24} />}
+            title="Matières"
+            description="Organise tes cours"
+            color="bg-pink-milk/40"
+            delay={0.6}
+          />
+          <ActionCard 
+            onClick={() => navigate('/planning')}
+            icon={<Calendar size={24} />}
+            title="Planning"
+            description="IA Scheduler"
+            color="bg-soft-gold/20"
+            delay={0.7}
+          />
+          <ActionCard 
+            onClick={() => navigate('/lofi')}
+            icon={<Music size={24} />}
+            title="Focus"
+            description="Lo-Fi Studio"
+            color="bg-blue-cloud/40"
+            delay={0.8}
+          />
+          <ActionCard 
+            onClick={() => navigate('/progress')}
+            icon={<TrendingUp size={24} />}
+            title="Progrès"
+            description="Stats & Évolution"
+            color="bg-sage-soft/30"
+            delay={0.9}
+          />
         </div>
       </div>
     </div>
+  )
+}
+
+function StatItem({ icon, label, value, delay, isAction = false }: { icon: React.ReactNode, label: string, value: string, delay: number, isAction?: boolean }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className={`bg-white/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white flex flex-col items-center justify-center space-y-2 group shadow-lg shadow-black/[0.01] ${isAction ? 'hover:bg-white/60 cursor-pointer transition-all duration-500' : ''}`}
+    >
+      <div className="mb-1 transition-transform duration-500 group-hover:scale-110">
+        {icon}
+      </div>
+      <div className="text-center">
+        <p className="text-[10px] font-bold text-hello-black/30 uppercase tracking-[0.2em] mb-0.5">{label}</p>
+        <p className="text-xl font-black text-hello-black">{value}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+function ActionCard({ onClick, icon, title, description, color, delay }: { onClick: () => void, icon: React.ReactNode, title: string, description: string, color: string, delay: number }) {
+  return (
+    <motion.div 
+      onClick={onClick}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      whileHover={{ scale: 1.02, y: -5 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white/40 backdrop-blur-xl p-8 rounded-[3rem] border border-white flex flex-col items-center text-center group cursor-pointer shadow-lg shadow-black/[0.01] hover:bg-white/60 transition-all duration-500"
+    >
+      <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-hello-black mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm`}>
+        {icon}
+      </div>
+      <h3 className="text-lg font-bold text-hello-black mb-1">{title}</h3>
+      <p className="text-xs text-hello-black/40 font-medium italic">
+        {description}
+      </p>
+    </motion.div>
   )
 }

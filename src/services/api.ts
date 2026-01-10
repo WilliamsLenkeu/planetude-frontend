@@ -6,6 +6,7 @@ class ApiService {
     const token = localStorage.getItem('token');
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
     
     if (token) {
@@ -15,67 +16,126 @@ class ApiService {
     return headers;
   }
 
-  async get<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-      method: 'GET',
-      headers: this.headers,
-    });
-    return this.handleResponse<T>(response);
+  async get<T>(path: string, options?: { params?: Record<string, any> }): Promise<T> {
+    let fullPath = path;
+    if (options?.params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        fullPath += (fullPath.includes('?') ? '&' : '?') + queryString;
+      }
+    }
+    return this.request<T>(fullPath, { method: 'GET' });
   }
 
   async getBlob(path: string): Promise<Blob> {
-    const response = await fetch(`${API_URL}${path}`, {
-      method: 'GET',
-      headers: this.headers,
-    });
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      throw {
-        status: response.status,
-        message: data?.message || 'Erreur lors du téléchargement',
-        data
-      };
-    }
+    const response = await this.requestRaw(path, { method: 'GET' });
     return response.blob();
   }
 
   async post<T>(path: string, body: any): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
+    return this.request<T>(path, {
       method: 'POST',
-      headers: this.headers,
       body: JSON.stringify(body),
     });
-    return this.handleResponse<T>(response);
   }
 
   async put<T>(path: string, body: any): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
+    return this.request<T>(path, {
       method: 'PUT',
-      headers: this.headers,
       body: JSON.stringify(body),
     });
-    return this.handleResponse<T>(response);
+  }
+
+  async patch<T>(path: string, body: any): Promise<T> {
+    return this.request<T>(path, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
   }
 
   async delete<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-      method: 'DELETE',
-      headers: this.headers,
-    });
-    return this.handleResponse<T>(response);
+    return this.request<T>(path, { method: 'DELETE' });
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    const data = await response.json().catch(() => null);
+  private async request<T>(path: string, options: RequestInit): Promise<T> {
+    const response = await this.requestRaw(path, options);
+    return response.json();
+  }
+
+  private async requestRaw(path: string, options: RequestInit): Promise<Response> {
+    const url = `${API_URL}${path}`;
+    const requestOptions = {
+      ...options,
+      headers: {
+        ...this.headers,
+        ...options.headers,
+      },
+    };
+
+    // Logging pour vConsole
+    if (localStorage.getItem('dev_mode') === 'true') {
+      console.log(`[API Request] ${options.method || 'GET'} ${path}`, options.body ? JSON.parse(options.body as string) : '');
+    }
+
+    let response = await fetch(url, requestOptions);
+
+    if (response.status === 401 && !path.includes('/auth/refresh')) {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json();
+            const token = refreshData.token || refreshData.accessToken;
+            localStorage.setItem('token', token);
+
+            requestOptions.headers = {
+              ...requestOptions.headers,
+              'Authorization': `Bearer ${token}`
+            };
+            response = await fetch(url, requestOptions);
+          }
+        } catch (error) {
+          console.error('Erreur refresh token:', error);
+        }
+      }
+    }
+
+    // Logging de la réponse pour vConsole
+    if (localStorage.getItem('dev_mode') === 'true') {
+      const clonedResponse = response.clone();
+      clonedResponse.json().then(data => {
+        console.log(`[API Response] ${response.status} ${path}`, data);
+      }).catch(async () => {
+        const text = await clonedResponse.text();
+        console.log(`[API Response] ${response.status} ${path} (Non-JSON)`, text.substring(0, 200));
+      });
+    }
+
     if (!response.ok) {
-      const error = {
+      const data = await response.json().catch(() => null);
+      if (localStorage.getItem('dev_mode') === 'true') {
+        console.error(`[API Error] ${response.status} ${path}`, data);
+      }
+      throw {
         status: response.status,
         message: data?.message || 'Une erreur est survenue',
-        data
+        data: data
       };
-      throw error;
     }
-    return data;
+
+    return response;
   }
 }
 

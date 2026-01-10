@@ -1,15 +1,13 @@
-import { Sparkles, Coffee, Book, Heart, PencilLine } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
 const TIPS = [
   "Prends une petite gorgée d'eau... 💧",
-  "N'oublie pas de détendre tes épaules. ✨",
-  "Ton espace de travail est ton sanctuaire. 🕯️",
-  "Chaque petit pas compte vers ton succès. 🌸",
-  "Respire profondément et concentre-toi. 🌿",
-  "C'est le moment idéal pour un thé chaud. ☕",
-  "Ton futur toi te remerciera pour tes efforts. 🎀",
+  "Détends tes épaules et respire. ✨",
+  "Ton espace est ton sanctuaire. 🕯️",
+  "Chaque petit pas compte. 🌸",
+  "La discipline est une forme d'amour de soi. 🎀",
+  "Un thé chaud et on s'y remet. ☕",
   "Organisation rime avec sérénité. 📁"
 ]
 
@@ -29,111 +27,128 @@ export function LoadingSpinner({ message, fullScreen = false }: LoadingSpinnerPr
   }, [])
 
   const containerClasses = fullScreen 
-    ? "fixed inset-0 bg-pink-milk/20 backdrop-blur-sm z-[9999] flex flex-col justify-center items-center p-6"
-    : "flex flex-col justify-center items-center min-h-[40vh] gap-6 p-6 w-full"
+    ? "fixed inset-0 z-[9999] flex flex-col justify-center items-center p-6"
+    : "flex flex-col justify-center items-center min-h-[40vh] gap-12 p-6 w-full"
 
   return (
-    <div className={containerClasses}>
-      <div className="relative">
-        {/* Cercles décoratifs */}
+    <div className={containerClasses} style={fullScreen ? { backgroundColor: 'var(--color-background)' } : {}}>
+      <div className="relative w-48 h-48 flex items-center justify-center">
+        {/* Cercles de lumière diffus - Effet Aura */}
         <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute -inset-6 md:-inset-10 border border-dashed border-pink-candy/20 rounded-full"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1],
+            borderRadius: ["40% 60% 70% 30% / 40% 50% 60% 50%", "60% 40% 30% 70% / 50% 60% 40% 60%", "40% 60% 70% 30% / 40% 50% 60% 50%"]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 blur-3xl"
+          style={{ backgroundColor: 'var(--color-primary)' }}
         />
         
         <motion.div 
           animate={{ 
-            y: [0, -8, 0],
-            rotate: [0, 1, -1, 0]
+            scale: [1.2, 1, 1.2],
+            opacity: [0.05, 0.15, 0.05],
+            borderRadius: ["60% 40% 30% 70% / 50% 60% 40% 60%", "40% 60% 70% 30% / 40% 50% 60% 50%", "60% 40% 30% 70% / 50% 60% 40% 60%"]
           }}
-          transition={{ 
-            duration: 5, 
-            repeat: Infinity,
-            ease: "easeInOut" 
-          }}
-          className="size-20 md:size-24 bg-white rounded-3xl border-2 border-pink-milk shadow-notebook flex items-center justify-center relative z-10 overflow-hidden"
-        >
-          {/* Lignes de papier subtiles */}
-          <div className="absolute inset-0 opacity-[0.08]" style={{ 
-            backgroundImage: 'linear-gradient(var(--color-paper-line) 1px, transparent 1px)',
-            backgroundSize: '100% 12px'
-          }} />
-          
-          <motion.div
-            animate={{ 
-              scale: [1, 1.05, 1],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="relative"
-          >
-            <Coffee className="text-pink-candy/60" size={36} />
-            <motion.div
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute inset-4 blur-2xl"
+          style={{ backgroundColor: 'var(--color-secondary, var(--color-primary))' }}
+        />
+
+        {/* Le Cœur du Loader - Orbite Minimaliste */}
+        <div className="relative w-24 h-24 flex items-center justify-center">
+          {/* Anneau de progression fluide */}
+          <svg className="absolute inset-0 w-full h-full -rotate-90">
+            <motion.circle
+              cx="48"
+              cy="48"
+              r="45"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+              className="opacity-10"
+              style={{ color: 'var(--color-text)' }}
+            />
+            <motion.circle
+              cx="48"
+              cy="48"
+              r="45"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeDasharray="283"
               animate={{ 
-                y: [0, -5, 0],
-                opacity: [0, 1, 0],
-                scale: [0.8, 1.2, 0.8]
+                strokeDashoffset: [283, 0, -283],
+                opacity: [0.3, 0.6, 0.3]
               }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-2 left-1/2 -translate-x-1/2 text-pink-candy/40"
-            >
-              <Sparkles size={14} />
-            </motion.div>
-          </motion.div>
-          
-          <Heart className="absolute bottom-2 right-2 text-pink-candy/30" size={10} fill="currentColor" />
-        </motion.div>
-        
-        {/* Icônes flottantes (uniquement si pas fullScreen ou sur desktop) */}
-        {!fullScreen && (
-          <>
-            <motion.div 
-              animate={{ y: [0, 10, 0], x: [0, 5, 0] }} 
-              transition={{ duration: 6, repeat: Infinity }}
-              className="absolute -top-4 -left-4 text-pink-candy/20"
-            >
-              <PencilLine size={20} />
-            </motion.div>
-            <motion.div 
-              animate={{ y: [0, -8, 0], x: [0, -5, 0] }} 
-              transition={{ duration: 7, repeat: Infinity, delay: 1 }}
-              className="absolute -bottom-2 -right-6 text-blue-cloud/30"
-            >
-              <Book size={22} />
-            </motion.div>
-          </>
-        )}
-      </div>
-      
-      <div className="text-center max-w-xs space-y-3">
-        <div className="space-y-1">
-          <p className="font-display text-xl md:text-2xl text-hello-black">
-            {message || "Préparation... ✨"}
-          </p>
-          <div className="flex justify-center gap-1">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                animate={{ 
-                  scale: [1, 1.4, 1],
-                  backgroundColor: ['#F8C3CD', '#E0A8B1', '#F8C3CD'] 
-                }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
-                className="w-1.5 h-1.5 rounded-full"
-              />
-            ))}
-          </div>
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+              strokeLinecap="round"
+              style={{ color: 'var(--color-primary)' }}
+            />
+          </svg>
+
+          {/* Noyau central évanescent */}
+          <motion.div 
+            animate={{ 
+              scale: [0.9, 1.1, 0.9],
+              opacity: [0.4, 0.8, 0.4],
+              borderRadius: ["35% 65% 60% 40% / 45% 40% 60% 55%", "65% 35% 40% 60% / 40% 60% 40% 60%", "35% 65% 60% 40% / 45% 40% 60% 55%"]
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-10 h-10 blur-[1px]"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          />
         </div>
 
-        <div className="min-h-[3rem] flex items-center justify-center px-4">
+        {/* Étoiles filantes discrètes */}
+        {[...Array(4)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ 
+              top: ["50%", `${Math.random() * 100}%`],
+              left: ["50%", `${Math.random() * 100}%`],
+              opacity: [0, 1, 0],
+              scale: [0, 1.2, 0]
+            }}
+            transition={{ 
+              duration: 3 + Math.random() * 2, 
+              repeat: Infinity, 
+              delay: i * 1.2,
+              ease: "easeOut" 
+            }}
+            className="absolute w-1 h-1 bg-white rounded-full blur-[0.5px] z-10"
+          />
+        ))}
+      </div>
+
+      <div className="text-center space-y-6 max-w-xs">
+        <div className="space-y-2">
+          <motion.div
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-[10px] font-black tracking-[0.4em] uppercase opacity-40" 
+            style={{ color: 'var(--color-text)' }}
+          >
+            {message || "Chargement"}
+          </motion.div>
+          <div className="h-[1px] w-12 mx-auto bg-gradient-to-r from-transparent via-text/20 to-transparent" />
+        </div>
+        
+        <div className="h-8 flex items-center justify-center">
           <AnimatePresence mode="wait">
-            <motion.p 
+            <motion.p
               key={tipIndex}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="font-serif italic text-pink-deep/40 text-xs md:text-sm leading-relaxed"
+              initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
+              transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+              className="text-sm font-medium italic text-text/50 font-display"
             >
               {TIPS[tipIndex]}
             </motion.p>
@@ -143,3 +158,5 @@ export function LoadingSpinner({ message, fullScreen = false }: LoadingSpinnerPr
     </div>
   )
 }
+
+

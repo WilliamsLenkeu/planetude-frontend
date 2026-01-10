@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Badge, User } from '../types/index';
+import type { User } from '../types/index';
 
 export const userService = {
   getProfile: async () => {
@@ -10,12 +10,5 @@ export const userService = {
   },
   changePassword: async (data: any) => {
     return api.put<{ success: boolean; message: string }>('/users/change-password', data);
-  },
-  // Ces méthodes sont conservées pour compatibilité mais devraient utiliser progressService/statsService
-  getStats: async () => {
-    return api.get<any>('/stats');
-  },
-  getBadges: async () => {
-    return api.get<Badge[]>('/badges');
   }
 };

@@ -1,260 +1,361 @@
-import { useState, useEffect } from 'react'
-import { Trophy, Star, Target, Heart, TrendingUp, Calendar, Clock } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { userService } from '../services/user.service'
+import { useMemo } from 'react'
+import { Trophy, Star, Target, Heart, Calendar, Clock, Sparkles, TrendingUp } from 'lucide-react'
 import { progressService } from '../services/progress.service'
 import { statsService } from '../services/stats.service'
 import { subjectService } from '../services/subject.service'
-import type { Badge, ProgressSession, ProgressSummary, GlobalStats, Subject } from '../types/index'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { BadgeItem } from '../components/ui/BadgeItem'
 import { motion } from 'framer-motion'
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts'
+import { useQuery } from '@tanstack/react-query'
 
 export default function Progress() {
-  const [badges, setBadges] = useState<Badge[]>([])
-  const [summary, setSummary] = useState<ProgressSummary | null>(null)
-  const [history, setHistory] = useState<ProgressSession[]>([])
-  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
-  const [subjects, setSubjects] = useState<Subject[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['progress-summary'],
+    queryFn: progressService.getSummary
+  })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [badgesData, summaryData, historyData, statsData, subjectsData] = await Promise.all([
-          userService.getBadges(),
-          progressService.getSummary(),
-          progressService.getAll(),
-          statsService.getGlobalStats(),
-          subjectService.getAll()
-        ])
-        
-        // Normalisation
-        setBadges(Array.isArray(badgesData) ? badgesData : (badgesData as any).data || [])
-        setSummary((summaryData as any).data || summaryData)
-        setHistory((historyData as any).data || historyData)
-        setGlobalStats((statsData as any).data || statsData)
-        setSubjects(Array.isArray(subjectsData) ? subjectsData : (subjectsData as any).data || [])
-      } catch (error) {
-        console.error('Erreur progression:', error)
-        toast.error('Impossible de charger les données de progression')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
+  const { data: history = [], isLoading: historyLoading } = useQuery({
+    queryKey: ['progress-history'],
+    queryFn: progressService.getAll
+  })
 
-  const getSubjectName = (id: string) => {
-    const subject = subjects.find(s => s._id === id)
-    return subject ? subject.name : id
+  const { data: globalStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['global-stats'],
+    queryFn: statsService.getGlobalStats
+  })
+
+  const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: subjectService.getAll
+  })
+
+  const isLoading = summaryLoading || historyLoading || statsLoading || subjectsLoading
+
+  const getSubjectName = (session: any) => {
+    if (session.matiere) return session.matiere
+    const subject = subjects.find((s: any) => s._id === session.subjectId)
+    return subject ? subject.name : (session.subjectId || 'Inconnue')
   }
+
+  const chartData = useMemo(() => {
+    // Si on a des stats réelles, on les utilise
+    if (globalStats?.masteryRadar && globalStats.masteryRadar.length >= 3) {
+      return globalStats.masteryRadar;
+    }
+    
+    // Sinon, on construit un radar à partir des matières existantes
+    if (subjects && subjects.length > 0) {
+      const baseData = subjects.map(s => ({
+        subject: s.name,
+        score: globalStats?.masteryRadar?.find(m => m.subject === s.name)?.score || 0
+      }));
+
+      // Si on a moins de 3 matières, le radar ne s'affichera pas bien
+      // Mais on retourne quand même les données pour le test de longueur
+      return baseData;
+    }
+
+    return [];
+  }, [globalStats, subjects]);
 
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="max-w-7xl mx-auto py-4 md:py-12 space-y-8 md:space-y-16 px-3 md:px-8">
-      {/* Résumé de Progression - Style Page de Garde */}
-      <section className="relative">
-        <div className="hidden md:flex absolute left-[-2rem] top-10 bottom-10 flex flex-col justify-around z-20">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm shadow-inner" />
-          ))}
-        </div>
-
+    <div className="min-h-screen relative overflow-hidden pb-20">
+      {/* Background Decorative Elements - Design 2.0 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="notebook-page p-4 md:p-12"
-        >
-          <div className="md:pl-8">
-            <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
-              <div className="w-9 h-9 md:w-12 md:h-12 bg-pink-candy/10 rounded-full flex items-center justify-center border border-pink-candy/20 shrink-0">
-                <TrendingUp className="size-4.5 md:size-6 text-pink-candy" />
-              </div>
-              <h2 className="text-xl md:text-5xl font-semibold text-hello-black font-display">
-                Journal d' <span className="text-pink-candy">Ascension</span>
-              </h2>
-            </div>
+          animate={{ 
+            scale: [1, 1.1, 1],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-pink-milk/30 rounded-full blur-[140px]" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, -8, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-cloud/20 rounded-full blur-[140px]" 
+        />
+      </div>
+
+      <div className="max-w-7xl mx-auto pt-8 px-4 md:px-8 relative z-10 space-y-10">
+        {/* Header Section - Design Immersif */}
+        <section>
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/40 backdrop-blur-2xl rounded-[3.5rem] p-10 border border-white relative overflow-hidden group shadow-2xl shadow-black/[0.02]"
+          >
+            <div className="absolute -top-32 -right-32 w-96 h-96 bg-pink-milk/20 rounded-full blur-3xl transition-transform duration-1000 group-hover:scale-125" />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 items-center">
-              <div className="md:col-span-2 space-y-5 md:space-y-8">
-                <div className="flex items-center gap-4 md:gap-8">
-                  <div className="relative group shrink-0">
-                    <div className="w-16 h-16 md:w-24 md:h-24 bg-white rounded-full flex items-center justify-center border-4 border-pink-milk shadow-xl group-hover:scale-110 transition-transform duration-500">
-                      <span className="text-2xl md:text-4xl font-bold text-pink-candy font-display">{summary?.level || 1}</span>
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 bg-pink-candy p-1.5 md:p-2.5 rounded-full shadow-lg border-2 border-white text-white rotate-12">
-                      <Trophy className="size-3.5 md:size-5" />
-                    </div>
+            <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
+              {/* Level Badge */}
+              <div className="relative shrink-0">
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="w-32 h-32 bg-white rounded-[2.5rem] flex flex-col items-center justify-center border-4 border-pink-milk shadow-xl relative z-10"
+                >
+                  <span className="text-[10px] font-bold text-pink-deep uppercase tracking-[0.2em] mb-1">Niveau</span>
+                  <span className="text-5xl font-black text-hello-black tracking-tighter">
+                    {summary?.level || 1}
+                  </span>
+                </motion.div>
+                <div className="absolute -bottom-2 -right-2 bg-hello-black p-3 rounded-2xl shadow-2xl text-white rotate-12 z-20 group-hover:rotate-0 transition-all duration-500">
+                  <Trophy className="size-6 text-soft-gold" />
+                </div>
+              </div>
+
+              {/* Rank Info */}
+              <div className="flex-1 w-full space-y-6">
+                <div className="space-y-3 text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white/60 backdrop-blur-md rounded-full border border-white shadow-sm">
+                    <TrendingUp size={14} className="text-pink-deep" />
+                    <span className="text-[10px] font-bold text-pink-deep uppercase tracking-[0.2em]">
+                      {summary?.rank || 'Apprentie'}
+                    </span>
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-2 md:mb-4 gap-1 md:gap-2">
-                      <div className="space-y-0.5 md:space-y-1">
-                        <span className="text-lg md:text-2xl font-semibold text-hello-black block font-display truncate">{summary?.rank || 'Apprentie'} 🎀</span>
-                        <span className="text-[8px] md:text-xs font-black text-pink-deep/40 uppercase tracking-widest block">Statut Actuel</span>
-                      </div>
-                      <span className="text-[9px] md:text-sm font-black text-pink-candy bg-pink-candy/5 px-2 md:px-4 py-1 md:py-1.5 rounded-full border border-pink-candy/10 self-start md:self-auto">
-                        {summary?.totalXP || 0} XP au total
-                      </span>
-                    </div>
-                    <div className="h-1.5 md:h-2 bg-pink-milk/20 rounded-full overflow-hidden border border-pink-milk/10 relative">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((summary?.totalXP || 0) % 100)}%` }}
-                        className="h-full bg-pink-candy rounded-full"
-                      />
-                    </div>
-                    <p className="text-[10px] md:text-xs text-hello-black/40 mt-2 md:mt-3 font-serif italic">
-                      Encore {summary?.xpToNextLevel || 0} XP pour le prochain chapitre... ✨
+                  <h2 className="text-4xl md:text-5xl font-black text-hello-black tracking-tight leading-tight">
+                    Ta Progression <span className="text-pink-deep italic font-serif font-normal">Éclatante</span>
+                  </h2>
+                  <p className="text-lg text-hello-black/40 font-medium italic">
+                    {summary?.totalXP || 0} XP cumulés • <span className="text-pink-deep">Objectif {summary?.xpToNextLevel || 0} XP</span>
+                  </p>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-3">
+                  <div className="h-4 bg-white/50 rounded-full overflow-hidden border border-white p-1 shadow-inner">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((summary?.totalXP || 0) % 100)}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-pink-candy to-pink-deep rounded-full shadow-lg"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center px-2">
+                    <span className="text-[10px] font-bold text-hello-black/30 uppercase tracking-[0.2em]">Chapitre {summary?.level || 1}</span>
+                    <span className="text-[10px] font-bold text-pink-deep uppercase tracking-[0.2em]">Chapitre {(summary?.level || 1) + 1}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Streak Card */}
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="lg:w-1/4 bg-hello-black text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden group/streak shrink-0"
+              >
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 group-hover/streak:scale-150 transition-transform duration-1000 blur-2xl" />
+                <div className="relative z-10 space-y-4">
+                  <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10 transition-transform duration-500 group-hover/streak:rotate-12">
+                    <Star className="text-soft-gold size-8" fill="currentColor" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em] mb-1">Série Actuelle</p>
+                    <p className="text-4xl font-black tracking-tighter">
+                      {globalStats?.streakDays || 0} <span className="text-lg font-medium opacity-40">j</span>
                     </p>
                   </div>
+                  <p className="text-xs text-white/50 font-medium italic">
+                    Ta constance est remarquable ✨
+                  </p>
                 </div>
-              </div>
-
-              <motion.div 
-                whileHover={{ rotate: -2, scale: 1.02 }}
-                className="bg-hello-black text-white p-5 md:p-8 rounded-2xl shadow-2xl relative overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-white/5 rounded-full -mr-12 md:-mr-16 -mt-12 md:-mt-16 group-hover:scale-150 transition-transform duration-700" />
-                <Star className="text-soft-gold mb-2 md:mb-4 relative z-10 size-5 md:size-8" fill="currentColor" />
-                <p className="text-[8px] md:text-[10px] opacity-50 uppercase font-black tracking-[0.2em] relative z-10">Série de Concentration</p>
-                <p className="text-2xl md:text-5xl font-bold font-display relative z-10 mt-1">{globalStats?.streakDays || 0} Jours</p>
-                <div className="mt-2 md:mt-4 h-[1px] w-8 md:w-12 bg-soft-gold/30 relative z-10" />
               </motion.div>
             </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Statistiques Globales - Style Notes Adhésives */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8">
-        {[
-          { icon: <Clock className="size-4 md:size-5" />, label: "Temps Total", value: `${globalStats?.totalStudyTime || 0} min`, color: "border-pink-candy" },
-          { icon: <Target className="size-4 md:size-5" />, label: "Moyenne/Session", value: `${globalStats?.averageSessionDuration || 0} min`, color: "border-sage-soft" },
-          { icon: <Star className="size-4 md:size-5" />, label: "Matière Favorite", value: globalStats?.mostStudiedSubject || 'N/A', color: "border-pink-candy" },
-          { icon: <Heart className="size-4 md:size-5" />, label: "Succès", value: badges.filter(b => b.awardedAt).length, color: "border-sage-soft" }
-        ].map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            whileHover={{ rotate: i % 2 === 0 ? 2 : -2, y: -5 }}
-            className={`bg-white p-4 md:p-8 rounded-sm shadow-notebook border-l-4 ${stat.color} relative group overflow-hidden`}
-          >
-            <div className="absolute top-0 right-0 p-1.5 md:p-2 opacity-5 group-hover:opacity-20 transition-opacity">
-              {stat.icon}
-            </div>
-            <div className="text-pink-deep/40 mb-2 md:mb-4 group-hover:scale-110 transition-transform inline-block">
-              {stat.icon}
-            </div>
-            <p className="text-[7px] md:text-[10px] font-black text-pink-deep/30 uppercase tracking-[0.2em] mb-0.5 md:mb-1">{stat.label}</p>
-            <p className="text-base md:text-2xl font-semibold text-hello-black font-display truncate">{stat.value}</p>
           </motion.div>
-        ))}
-      </section>
+        </section>
 
-      {/* Historique Récent - Style Carnet de Bord */}
-      <section className="relative">
-        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
-          <h2 className="text-lg md:text-3xl font-semibold text-hello-black font-display">
-            Journal de <span className="text-pink-candy">Bord</span>
-          </h2>
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-pink-candy/20 to-transparent" />
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="notebook-page overflow-hidden p-0 shadow-lg md:shadow-2xl"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-pink-milk/10">
-                  <th className="px-3 md:px-8 py-3 md:py-6 text-[7px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Date</th>
-                  <th className="px-3 md:px-8 py-3 md:py-6 text-[7px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Matière</th>
-                  <th className="px-3 md:px-8 py-3 md:py-6 text-[7px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em]">Durée</th>
-                  <th className="px-3 md:px-8 py-3 md:py-6 text-[7px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em] text-right">XP</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-pink-milk/5">
-                {history.length > 0 ? history.slice(0, 5).map((session, i) => (
-                  <tr key={i} className="hover:bg-pink-milk/5 transition-colors group">
-                    <td className="px-3 md:px-8 py-3 md:py-6">
-                      <div className="flex items-center gap-1.5 md:gap-3">
-                        <Calendar className="size-2.5 md:size-3.5 text-pink-candy/40" />
-                        <span className="font-medium text-hello-black/70 font-serif text-[10px] md:text-sm">
-                          {new Date(session.date || '').toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-3 md:px-8 py-3 md:py-6">
-                      <span className="font-semibold text-hello-black font-display text-[10px] md:text-base">{getSubjectName(session.subjectId)}</span>
-                    </td>
-                    <td className="px-3 md:px-8 py-3 md:py-6">
-                      <div className="flex items-center gap-1 md:gap-2 text-hello-black/50 text-[10px] md:text-xs">
-                        <Clock className="size-2.5 md:size-3" />
-                        {session.durationMinutes}m
-                      </div>
-                    </td>
-                    <td className="px-3 md:px-8 py-3 md:py-6 text-right">
-                      <span className="font-black text-pink-candy text-[10px] md:text-sm">+{session.xpGained || 0}</span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} className="px-8 py-8 md:py-12 text-center text-hello-black/30 font-serif italic text-xs md:text-sm">
-                      Aucune session enregistrée... ✨
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Section Badges - Style Planche de Stickers */}
-      <section className="space-y-6 md:space-y-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-4">
-          <div>
-            <h2 className="text-lg md:text-3xl font-semibold text-hello-black font-display">
-              Collection de <span className="text-pink-candy">Stickers</span>
-            </h2>
-            <p className="text-pink-deep/40 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 md:mt-1">
-              Souvenirs de tes plus belles victoires
-            </p>
-          </div>
-          <div className="bg-white px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-pink-milk shadow-sm self-end md:self-auto">
-            <span className="text-pink-candy font-bold text-[10px] md:text-sm">
-              {badges.filter(b => b.awardedAt).length} <span className="text-pink-deep/30 mx-1">/</span> {badges.length} Débloqués
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-8">
-          {badges.map((badge, index) => (
-            <motion.div
-              key={badge._id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ rotate: index % 2 === 0 ? 5 : -5, scale: 1.1 }}
-              className="relative group"
-            >
-              <BadgeItem badge={badge} />
-              {badge.awardedAt && (
-                <div className="absolute -top-1 -right-1 size-3.5 md:size-5 bg-sage-soft rounded-full flex items-center justify-center text-white border border-white shadow-sm scale-100 md:scale-0 md:group-hover:scale-100 transition-transform">
-                  <Star className="size-2 md:size-[10px]" fill="currentColor" />
+        {/* Stats & Radar Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Radar Chart Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-5 bg-white/40 backdrop-blur-xl rounded-[3.5rem] p-10 border border-white relative overflow-hidden group shadow-xl shadow-black/[0.01]"
+          >
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-pink-milk/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+            
+            <div className="relative z-10 mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 bg-white rounded-2xl border border-pink-candy/10 shadow-sm">
+                  <Target size={22} className="text-pink-deep" />
+                </div>
+                <h3 className="text-[10px] font-bold text-hello-black uppercase tracking-[0.3em]">
+                  Équilibre de Maîtrise
+                </h3>
+              </div>
+              <h4 className="text-2xl font-black text-hello-black tracking-tight leading-tight">Ton Radar de Succès</h4>
+            </div>
+            
+            <div className="w-full h-[320px] relative z-10">
+              {chartData.length >= 3 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                    <PolarGrid stroke="#FF8FAB" strokeOpacity={0.2} />
+                    <PolarAngleAxis 
+                      dataKey="subject" 
+                      tick={{ fill: '#2D3436', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em' }}
+                    />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Maîtrise"
+                      dataKey="score"
+                      stroke="#FF8FAB"
+                      fill="#FF8FAB"
+                      fillOpacity={0.4}
+                      strokeWidth={4}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
+                  <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-pink-candy/10 border-dashed animate-pulse">
+                    <Target className="text-pink-deep/20" size={40} />
+                  </div>
+                  <p className="text-lg text-hello-black/40 font-medium italic leading-relaxed">
+                    Ajoute au moins 3 matières pour débloquer ton radar
+                  </p>
                 </div>
               )}
-            </motion.div>
-          ))}
+            </div>
+          </motion.div>
+
+          {/* Detailed Stats Grid */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <StatCard 
+              icon={<Clock className="size-6" />}
+              label="Temps Total"
+              value={`${globalStats?.totalStudyTime || 0} min`}
+              color="bg-pink-milk/50"
+              delay={0.1}
+            />
+            <StatCard 
+              icon={<Target className="size-6" />}
+              label="Moyenne Session"
+              value={`${globalStats?.averageSessionDuration || 0} min`}
+              color="bg-blue-cloud/40"
+              delay={0.2}
+            />
+            <StatCard 
+              icon={<Star className="size-6" />}
+              label="Matière Favorite"
+              value={globalStats?.mostStudiedSubject || 'N/A'}
+              color="bg-sage-soft/30"
+              delay={0.3}
+            />
+            <StatCard 
+              icon={<Heart className="size-6" />}
+              label="Succès Total"
+              value={summary?.streak || 0}
+              color="bg-soft-gold/20"
+              delay={0.4}
+            />
+          </div>
         </div>
-      </section>
+
+        {/* History Table - Design 2.0 */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-6">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black text-hello-black tracking-tight">
+                Journal de <span className="text-pink-deep italic font-serif font-normal">Bord</span>
+              </h2>
+              <p className="text-lg text-hello-black/40 font-medium italic">Tes dernières sessions</p>
+            </div>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/40 backdrop-blur-xl rounded-[3.5rem] overflow-hidden border border-white shadow-xl shadow-black/[0.01]"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white/40 border-b border-white">
+                    <th className="px-8 py-6 text-[10px] font-bold text-pink-deep uppercase tracking-[0.3em]">Date</th>
+                    <th className="px-8 py-6 text-[10px] font-bold text-pink-deep uppercase tracking-[0.3em]">Matière</th>
+                    <th className="px-8 py-6 text-[10px] font-bold text-pink-deep uppercase tracking-[0.3em]">Durée</th>
+                    <th className="px-8 py-6 text-[10px] font-bold text-pink-deep uppercase tracking-[0.3em] text-right">Gain XP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white">
+                  {history.length > 0 ? history.slice(0, 10).map((session: any, i: number) => (
+                    <motion.tr 
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="hover:bg-white/60 transition-all duration-300 group"
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded-xl text-pink-deep border border-pink-candy/10 group-hover:rotate-12 transition-transform">
+                            <Calendar className="size-4" />
+                          </div>
+                          <span className="font-bold text-hello-black/60 text-xs uppercase tracking-wider">
+                            {new Date(session.date || '').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="font-black text-hello-black text-lg tracking-tight group-hover:text-pink-deep transition-colors">
+                          {getSubjectName(session)}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2 text-hello-black/40 text-xs font-bold uppercase tracking-wider">
+                          <Clock className="size-4" />
+                          {session.durationMinutes} min
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <span className="inline-flex items-center gap-2 font-black text-pink-deep bg-white px-4 py-2 rounded-2xl text-[10px] border border-pink-candy/10 shadow-sm uppercase tracking-widest">
+                          <Sparkles size={12} className="text-pink-candy" />
+                          +{session.xpGained || 0} XP
+                        </span>
+                      </td>
+                    </motion.tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-8 py-20 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center border-2 border-pink-candy/10 border-dashed">
+                            <Star size={32} className="text-pink-deep/20" />
+                          </div>
+                          <p className="text-hello-black/30 font-bold uppercase tracking-[0.3em] text-xs">L'aventure commence ici...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </section>
+      </div>
     </div>
+  )
+}
+
+function StatCard({ icon, label, value, color, delay }: { icon: React.ReactNode, label: string, value: string | number, color: string, delay: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      className="bg-white/40 backdrop-blur-xl p-8 rounded-[3rem] border border-white flex flex-col justify-center relative group overflow-hidden shadow-lg shadow-black/[0.01]"
+    >
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-pink-milk/10 rounded-full group-hover:scale-150 transition-transform duration-700" />
+      <div className={`${color} w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 relative z-10 border border-white shadow-sm`}>
+        {icon}
+      </div>
+      <p className="text-[10px] font-bold text-hello-black/30 uppercase tracking-[0.3em] mb-2 relative z-10">{label}</p>
+      <p className="text-2xl font-black text-hello-black tracking-tight truncate relative z-10">{value}</p>
+    </motion.div>
   )
 }

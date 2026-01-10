@@ -118,14 +118,14 @@ Organise tes sessions d'étude avec style.
 | `/:id/export.ical` | `GET` | - | Télécharge ton planning pour ton calendrier. |
 | `/:id/export.pdf` | `GET` | - | Télécharge une version PDF toute mignonne. |
 
-### 🏆 Progrès & Gamification (`/progress`, `/stats`, `/badges`)
+### 🏆 Progrès & Gamification (`/progress`, `/stats`)
 
 | Endpoint | Méthode | Body | Description |
 | :--- | :--- | :--- | :--- |
 | `/progress` | `POST` | `{ sessionsCompletees, tempsEtudie }` | Enregistre tes efforts et gagne de l'XP ! |
 | `/progress/summary`| `GET` | - | Récapitulatif de tes progrès récents. |
 | `/stats` | `GET` | - | Toutes tes statistiques pour le Dashboard. |
-| `/badges` | `GET` | - | Admire tous les badges que tu as collectés. |
+| `/user/profile` | `GET` | - | Récupère ton profil. |
 
 ### 👤 Profil & Rappels (`/user`, `/reminders`)
 

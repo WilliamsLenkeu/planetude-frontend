@@ -1,160 +1,265 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BookOpen, Plus, Trash2, Palette } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { HexColorPicker } from 'react-colorful'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { subjectService } from '../services/subject.service'
 import type { Subject } from '../types'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function Subjects() {
-  const [subjects, setSubjects] = useState<Subject[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [newSubject, setNewSubject] = useState({ name: '', color: '#ffafcc' })
+  const queryClient = useQueryClient()
+  const [newSubject, setNewSubject] = useState({ name: '', color: '#D2B48C' })
+  const [showPicker, setShowPicker] = useState(false)
+  const pickerRef = useRef<HTMLDivElement>(null)
+
+  // Fetch subjects with React Query
+  const { data: subjects = [], isLoading } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: subjectService.getAll
+  })
+
+  // Mutation for adding a subject
+  const addMutation = useMutation({
+    mutationFn: (subject: Partial<Subject>) => subjectService.create(subject),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] })
+      setNewSubject({ name: '', color: '#D2B48C' })
+      toast.success('Matière ajoutée ! ✨')
+    },
+    onError: () => toast.error('Oups, petit souci... 🎀')
+  })
+
+  // Mutation for deleting a subject
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => subjectService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] })
+      toast.success('Matière supprimée !')
+    },
+    onError: () => toast.error('Erreur lors de la suppression')
+  })
 
   useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const data = await subjectService.getAll()
-        setSubjects(data)
-      } catch (error) {
-        console.error('Erreur matières:', error)
-      } finally {
-        setIsLoading(false)
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowPicker(false)
       }
     }
-    fetchSubjects()
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newSubject.name.trim()) return
-    try {
-      const created = await subjectService.create(newSubject)
-      setSubjects([...subjects, created])
-      setNewSubject({ name: '', color: '#ffafcc' })
-      toast.success('Matière ajoutée ! ✨')
-    } catch (error) {
-      toast.error('Oups, petit souci... 🎀')
-    }
+    addMutation.mutate(newSubject)
   }
 
   const handleDelete = async (id: string) => {
-    try {
-      await subjectService.delete(id)
-      setSubjects(subjects.filter(s => s._id !== id))
-      toast.success('Matière supprimée !')
-    } catch (error) {
-      toast.error('Erreur lors de la suppression')
+    if (confirm('Supprimer cette matière ?')) {
+      deleteMutation.mutate(id)
     }
   }
 
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 md:space-y-12 pb-10 md:pb-20 px-2 md:px-0">
-      <div className="text-center space-y-2 md:space-y-4 pt-4 md:pt-0">
-        <h2 className="text-3xl md:text-5xl font-semibold text-hello-black font-display">
-          Mes <span className="text-pink-candy">Classeurs</span>
-        </h2>
-        <p className="text-hello-black/40 italic font-serif text-sm md:text-base">"Organise tes pensées, une couleur à la fois... 🎨"</p>
+    <div className="max-w-7xl mx-auto px-6 pt-12 pb-24 space-y-16">
+      {/* Background Elements */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-pink-milk/30 rounded-full blur-[140px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-pink-candy/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Formulaire d'Ajout - Style Fiche Index */}
-      <div className="relative max-w-2xl mx-auto px-2 md:px-0">
-        {/* Paper Clip Decorative */}
-        <div className="absolute -top-4 md:-top-6 left-1/2 -translate-x-1/2 w-6 md:w-8 h-10 md:h-12 bg-gray-300/30 rounded-full border-2 border-gray-400/20 rotate-12 backdrop-blur-sm z-10" />
-        
-        <div className="notebook-page p-5 md:p-8 border-t-4 md:border-t-8 border-pink-candy/30">
-          <form onSubmit={handleAdd} className="space-y-4 md:space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-              <div className="space-y-2 md:space-y-3">
-                <label className="text-[8px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em] ml-1">Nom de la matière</label>
+      {/* Header Sophistiqué */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-black/5 pb-12">
+        <div className="space-y-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-black/5">
+              <BookOpen size={24} className="text-pink-deep" strokeWidth={1.5} />
+            </div>
+            <div className="h-[1px] w-12 bg-black/10" />
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-hello-black/30">Curriculum</span>
+          </motion.div>
+          
+          <div className="space-y-2">
+            <h1 className="text-5xl md:text-7xl font-black text-hello-black tracking-tight">
+              Matières
+            </h1>
+            <p className="text-xl text-hello-black/40 font-display italic">
+              Personnalise ton univers d'apprentissage.
+            </p>
+          </div>
+        </div>
+
+        {/* Formulaire d'Ajout - Design Sophistiqué */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full md:max-w-xl"
+        >
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div className="flex items-center gap-4 p-4 bg-white/90 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl shadow-black/[0.05] focus-within:shadow-pink-deep/5 transition-all duration-500">
+              <div className="relative" ref={pickerRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowPicker(!showPicker)}
+                  className="w-16 h-16 rounded-[2rem] border-4 border-white shadow-lg transition-all hover:scale-110 active:scale-95 flex items-center justify-center group/btn overflow-hidden relative"
+                  style={{ backgroundColor: newSubject.color }}
+                >
+                  <Palette size={24} className="text-white mix-blend-difference" />
+                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                </button>
+
+                <AnimatePresence>
+                  {showPicker && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 15, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 15, scale: 0.9 }}
+                      className="absolute top-full mt-6 left-0 z-[100] p-8 bg-white rounded-[3.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] border border-black/5"
+                    >
+                      <HexColorPicker 
+                        color={newSubject.color} 
+                        onChange={color => setNewSubject({...newSubject, color})} 
+                      />
+                      <div className="mt-8 flex items-center justify-between gap-6 px-2">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-black text-hello-black/20 uppercase tracking-[0.2em]">Couleur</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: newSubject.color }} />
+                            <span className="text-sm font-mono font-black text-hello-black uppercase tracking-wider">{newSubject.color}</span>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setShowPicker(false)}
+                          className="px-6 py-3 bg-hello-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-pink-deep hover:text-hello-black transition-colors"
+                        >
+                          OK
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="flex-1 relative group">
                 <input 
                   type="text"
                   value={newSubject.name}
                   onChange={e => setNewSubject({...newSubject, name: e.target.value})}
-                  placeholder="Ex: Alchimie des Couleurs 🧪"
-                  className="w-full bg-pink-milk/10 border-b-2 border-pink-milk/30 p-2 md:p-3 focus:outline-none focus:border-pink-candy transition-colors font-display text-base md:text-lg"
+                  placeholder="Nom de la matière..."
+                  className="w-full bg-transparent border-none focus:ring-0 rounded-2xl h-14 px-2 text-lg font-bold placeholder:text-hello-black/10 outline-none text-hello-black"
                 />
               </div>
-              <div className="space-y-2 md:space-y-3">
-                <label className="text-[8px] md:text-[10px] font-black text-pink-deep/40 uppercase tracking-[0.2em] ml-1">Couleur du Classeur</label>
-                <div className="flex items-center gap-3 md:gap-4 bg-pink-milk/5 p-1.5 md:p-2 rounded-xl border border-pink-milk/10">
-                  <input 
-                    type="color"
-                    value={newSubject.color}
-                    onChange={e => setNewSubject({...newSubject, color: e.target.value})}
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-lg cursor-pointer overflow-hidden border-2 border-white shadow-sm"
-                  />
-                  <span className="text-xs md:text-sm font-black text-hello-black/40 tracking-widest">{newSubject.color.toUpperCase()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end pt-2 md:pt-4">
-              <button type="submit" className="w-full md:w-auto bg-hello-black text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-pink-candy transition-all shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                <Plus className="size-4 md:size-[18px]" /> Créer le Classeur
+
+              <button 
+                type="submit" 
+                disabled={addMutation.isPending || !newSubject.name.trim()}
+                className="px-10 h-16 bg-hello-black text-white rounded-[2rem] flex items-center justify-center gap-3 hover:bg-pink-deep hover:text-hello-black transition-all active:scale-95 shadow-xl shadow-hello-black/10 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed group"
+              >
+                {addMutation.isPending ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span className="hidden sm:inline text-[10px] font-black uppercase tracking-[0.3em]">Ajouter</span>
+                    <Plus size={22} className="group-hover:rotate-90 transition-transform duration-500" />
+                  </>
+                )}
               </button>
             </div>
           </form>
-        </div>
-      </div>
+        </motion.div>
+      </header>
 
-      {/* Liste des Matières - Style intercalaires de classeur */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-2 md:px-0">
-        {subjects.map((subject, index) => (
-          <motion.div
-            key={subject._id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            whileHover={{ y: -8, rotate: index % 2 === 0 ? -1 : 1 }}
-            className="relative group cursor-pointer"
-          >
-            {/* Folder Tab Effect */}
-            <div 
-              className="absolute -top-3 md:-top-4 left-6 h-6 md:h-8 w-20 md:w-24 rounded-t-xl transition-transform group-hover:-translate-y-1"
-              style={{ backgroundColor: subject.color }}
-            />
-            
-            <div className="notebook-page p-6 md:p-8 min-h-[160px] md:min-h-[200px] flex flex-col justify-between relative z-10 overflow-hidden group">
-              {/* Decorative Folder Lines */}
-              <div className="absolute right-[-10%] top-[-10%] w-24 md:w-32 h-24 md:h-32 bg-pink-milk/5 rounded-full" />
-              
-              <div className="flex justify-between items-start relative z-10">
+      {/* Liste des Matières */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <AnimatePresence mode="popLayout">
+          {subjects.map((subject, index) => (
+            <motion.div
+              key={subject._id}
+              layout
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+              transition={{ 
+                delay: index * 0.05,
+                type: "spring",
+                stiffness: 260,
+                damping: 20
+              }}
+              className="group relative"
+            >
+              <div className="h-full bg-white/40 backdrop-blur-sm rounded-[3rem] p-8 border border-white hover:bg-white/60 transition-all duration-500 hover:shadow-2xl hover:shadow-black/[0.02]">
+                <div className="flex justify-between items-start mb-12">
+                  <div 
+                    className="w-16 h-16 rounded-[2rem] relative overflow-hidden flex items-center justify-center transition-transform duration-700 group-hover:rotate-6"
+                    style={{ backgroundColor: `${subject.color}10` }}
+                  >
+                    <div 
+                      className="absolute inset-0 opacity-20 blur-xl group-hover:opacity-40 transition-opacity"
+                      style={{ backgroundColor: subject.color }}
+                    />
+                    <BookOpen size={28} style={{ color: subject.color }} strokeWidth={1.5} />
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleDelete(subject._id)}
+                    className="w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 text-red-400 rounded-2xl transition-all duration-300"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: subject.color }} />
+                      <span className="text-[10px] font-black text-hello-black/20 uppercase tracking-[0.2em] font-mono">
+                        {subject.color}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-black text-hello-black tracking-tight group-hover:text-pink-deep transition-colors duration-300">
+                      {subject.name}
+                    </h3>
+                  </div>
+
+                  <div className="pt-6 border-t border-black/5 flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-black/5" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-bold text-hello-black/30 uppercase tracking-widest">
+                      0 Sessions
+                    </span>
+                  </div>
+                </div>
+
+                {/* Hover Effect Layer */}
                 <div 
-                  className="p-2.5 md:p-3 rounded-2xl text-white shadow-lg"
+                  className="absolute inset-0 rounded-[3rem] opacity-0 group-hover:opacity-[0.02] pointer-events-none transition-opacity duration-500"
                   style={{ backgroundColor: subject.color }}
-                >
-                  <BookOpen className="size-5 md:size-6" />
-                </div>
-                <button 
-                  onClick={() => handleDelete(subject._id)}
-                  className="p-2 text-hello-black/10 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:scale-110"
-                >
-                  <Trash2 className="size-4 md:size-5" />
-                </button>
-              </div>
+                />
 
-              <div className="relative z-10 mt-4 md:mt-0">
-                <h3 className="text-xl md:text-2xl font-semibold text-hello-black font-display mb-1 md:mb-2">{subject.name}</h3>
-                <div className="flex items-center gap-2 text-[8px] md:text-[10px] font-black text-pink-deep/30 uppercase tracking-[0.2em]">
-                  <Palette className="size-3 md:size-[14px]" /> 
-                  <span className="group-hover:text-pink-candy transition-colors">{subject.color}</span>
-                </div>
-              </div>
-
-              {/* Progress Indicator Decorative */}
-              <div className="absolute bottom-0 left-0 w-full h-1 md:h-1.5 bg-pink-milk/10">
+                {/* Decorative Gradient Line */}
                 <div 
-                  className="h-full opacity-40"
-                  style={{ backgroundColor: subject.color, width: '40%' }}
+                  className="absolute bottom-10 right-10 w-12 h-1 rounded-full opacity-20 group-hover:w-20 transition-all duration-500"
+                  style={{ backgroundColor: subject.color }}
                 />
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   )
 }
+

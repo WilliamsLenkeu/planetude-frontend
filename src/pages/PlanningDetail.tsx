@@ -1,38 +1,102 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, Star, Play, Bookmark } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, Star, Play, Bookmark, X, Zap, BookOpen, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { planningService } from '../services/planning.service'
-import { progressService } from '../services/progress.service'
-import type { Planning, Session } from '../types/index'
+import { subjectService } from '../services/subject.service'
+import type { Session } from '../types/index'
 import toast from 'react-hot-toast'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 
 export default function PlanningDetail() {
   const { id } = useParams()
-  const [data, setData] = useState<{ planning: Planning, sessions: Session[] } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [isExporting, setIsExporting] = useState(false)
 
-  const fetchData = async () => {
-    if (!id) return
-    try {
-      const result = await planningService.getById(id)
-      setData({ planning: result, sessions: result.sessions || [] })
-    } catch (error) {
-      console.error('Erreur detail planning:', error)
-      toast.error('Impossible de charger les détails du planning')
-    } finally {
-      setIsLoading(false)
+  // Focus Mode State
+  const [activeSession, setActiveSession] = useState<Session | null>(null)
+  const [timeLeft, setTimeLeft] = useState(25 * 60) // 25 minutes default
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [sessionNotes, setSessionNotes] = useState('')
+
+  const { data, isLoading: isPlanningLoading } = useQuery({
+    queryKey: ['planning', id],
+    queryFn: () => planningService.getById(id!),
+    enabled: !!id,
+    select: (data) => ({ planning: data, sessions: data.sessions || [] })
+  })
+
+  const { data: subjects = [], isLoading: isSubjectsLoading } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: subjectService.getAll,
+    select: (data) => Array.isArray(data) ? data : []
+  })
+
+  const updateSessionMutation = useMutation({
+    mutationFn: ({ sessionId, updates }: { sessionId: string, updates: any }) => 
+      planningService.updateSession(id!, sessionId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planning', id] })
+      setActiveSession(null)
+      setSessionNotes('')
+      toast.success('Session terminée ! Tu as gagné de l\'XP')
+    },
+    onError: () => {
+      toast.error('Erreur lors de la validation de la session')
     }
+  })
+
+  const handleCompleteSession = useCallback(async () => {
+    if (!id || !activeSession || !activeSession._id) return
+    setIsTimerRunning(false)
+    updateSessionMutation.mutate({ 
+      sessionId: activeSession._id, 
+      updates: { statut: 'termine', notes: sessionNotes } 
+    })
+  }, [id, activeSession, sessionNotes, updateSessionMutation])
+
+  const isLoading = isPlanningLoading || isSubjectsLoading
+
+  // Timer logic
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+    } else if (timeLeft === 0 && isTimerRunning) {
+      // Signal sonore simple
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
+        audio.play()
+      } catch (e) {
+        console.warn('Erreur lecture audio:', e)
+      }
+      handleCompleteSession()
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isTimerRunning, timeLeft, handleCompleteSession])
+
+  const handleStartFocus = (session: Session) => {
+    setActiveSession(session)
+    setTimeLeft(25 * 60) // Reset to 25 mins for Pomodoro
+    setIsTimerRunning(true)
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [id])
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   const handleExport = async (type: 'pdf' | 'ical') => {
-    if (!id || !data) return
+    if (!id || !data?.planning) return
     setIsExporting(true)
+    const toastId = toast.loading(`Génération du ${type.toUpperCase()}...`)
     try {
       const blob = type === 'pdf' 
         ? await planningService.exportPDF(id)
@@ -41,44 +105,21 @@ export default function PlanningDetail() {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', `planning-${data.planning.title || 'export'}.${type === 'pdf' ? 'pdf' : 'ics'}`)
+      link.setAttribute('download', `planning-${data.planning.titre || 'etude'}.${type === 'pdf' ? 'pdf' : 'ics'}`)
       document.body.appendChild(link)
       link.click()
       link.parentNode?.removeChild(link)
-      toast.success(`Export ${type.toUpperCase()} réussi ! ✨`)
+      toast.success(`${type.toUpperCase()} exporté !`, { id: toastId })
     } catch (error) {
-      toast.error('Erreur lors de l\'export')
+      console.error(`Erreur export ${type}:`, error)
+      toast.error(`Impossible d'exporter en ${type.toUpperCase()}`, { id: toastId })
     } finally {
       setIsExporting(false)
     }
   }
 
-  const handleStartSession = async (session: Session) => {
-    try {
-      const duration = session.duration || 25
-      const response = await progressService.recordSession({
-        subjectId: session.matiere,
-        durationMinutes: duration,
-        notes: `Session de planning: ${session.title || 'Sans titre'}`
-      })
-      
-      toast.success(`Session terminée ! +${(response as any).data?.xpGained || 15} XP ✨`)
-      await fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors du démarrage')
-    }
-  }
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-bounce">
-          <div className="w-16 h-16 bg-pink-candy rounded-full border-4 border-white shadow-notebook flex items-center justify-center">
-            <Star className="text-white" size={32} />
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!data) return null
@@ -86,148 +127,264 @@ export default function PlanningDetail() {
   const { planning, sessions } = data
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 py-6 px-4">
+    <div className="max-w-4xl mx-auto space-y-8 py-5 px-4">
       {/* En-tête avec navigation */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <Link 
             to="/planning" 
             className="group flex items-center gap-2 text-hello-black/40 hover:text-pink-deep transition-colors"
           >
-            <div className="p-2 bg-white shadow-sm group-hover:shadow-md transition-all rounded-full">
-              <ArrowLeft size={20} />
+            <div className="p-1.5 bg-white border-2 border-pink-candy/5 shadow-sm group-hover:shadow-md transition-all rounded-full">
+              <ArrowLeft size={16} />
             </div>
-            <span className="font-black uppercase tracking-widest text-[10px]">Retour à l'agenda</span>
+            <span className="font-black uppercase tracking-[0.2em] text-[10px]">Retour</span>
           </Link>
           
-          <div className="h-8 w-[2px] bg-pink-milk hidden md:block" />
+          <div className="h-6 w-[1.5px] bg-pink-milk hidden md:block" />
           
           <div className="hidden md:block">
-            <h2 className="text-3xl font-black text-hello-black italic font-serif leading-none">{planning.title}</h2>
+            <h2 className="text-2xl font-black text-hello-black italic font-serif leading-none">
+              {planning.titre}
+            </h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-hello-black/30 mt-1">
-              Journal créé le {new Date(planning.createdAt).toLocaleDateString()}
+              Journal créé le {planning.createdAt ? new Date(planning.createdAt).toLocaleDateString() : 'récemment'}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2.5">
           <button 
             onClick={() => handleExport('pdf')}
             disabled={isExporting}
-            className="p-3 bg-white shadow-sm border border-gray-100 text-hello-black hover:bg-pink-milk transition-colors disabled:opacity-50"
+            className="p-2.5 bg-white border-2 border-pink-candy/5 text-hello-black/60 hover:text-pink-deep hover:border-pink-candy/10 transition-all rounded-lg disabled:opacity-50 shadow-sm"
             title="Exporter en PDF"
           >
-            <FileText size={18} />
+            <FileText size={16} />
           </button>
           <button 
             onClick={() => handleExport('ical')}
             disabled={isExporting}
-            className="p-3 bg-white shadow-sm border border-gray-100 text-hello-black hover:bg-pink-milk transition-colors disabled:opacity-50"
+            className="p-2.5 bg-white border-2 border-pink-candy/5 text-hello-black/60 hover:text-pink-deep hover:border-pink-candy/10 transition-all rounded-lg disabled:opacity-50 shadow-sm"
             title="Exporter en iCal"
           >
-            <Calendar size={18} />
+            <Calendar size={16} />
           </button>
         </div>
       </div>
 
       <div className="relative">
-        {/* Anneaux de classeur pour l'immersion */}
-        <div className="absolute left-[-1rem] top-10 bottom-10 flex flex-col justify-around z-20 pointer-events-none hidden md:flex">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
-          ))}
-        </div>
+        <div className="chic-card p-6 md:p-10 relative overflow-hidden group">
+          {/* Decorative element */}
+          <div className="absolute -top-20 -right-20 w-52 h-52 bg-pink-milk/20 rounded-full blur-3xl transition-transform duration-1000 group-hover:scale-125" />
 
-        <div className="notebook-page p-6 md:p-12 shadow-2xl relative">
-          <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden">
-            <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-pink-candy/10 rotate-45 border-b-2 border-pink-candy/20" />
-          </div>
-
-          <div className="flex items-center gap-3 mb-10 md:pl-8">
-            <Bookmark className="text-pink-deep fill-pink-deep" size={24} />
-            <h3 className="text-2xl font-black text-hello-black uppercase tracking-wider">
-              Détails du Programme
-            </h3>
+          <div className="flex items-center gap-4 mb-10 relative z-10">
+            <div className="w-10 h-10 bg-pink-milk/50 rounded-xl flex items-center justify-center text-pink-deep border-2 border-pink-candy/5 shadow-sm">
+              <Bookmark size={20} strokeWidth={1.5} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-hello-black font-display tracking-tight leading-tight">
+                Détails du Programme
+              </h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-deep/40">Organisation & Focus</p>
+            </div>
           </div>
           
-          <div className="space-y-6 md:pl-8 relative z-10">
+          <div className="space-y-5 relative z-10">
             {sessions.length === 0 ? (
-              <div className="text-center py-16 bg-pink-milk/20 border-2 border-dashed border-pink-milk/50">
-                <p className="text-hello-black/40 font-display italic text-lg">Aucune session prévue dans ce planning... 🌸</p>
+              <div className="text-center py-16 bg-pink-milk/10 border-2 border-dashed border-pink-candy/20 rounded-[2rem]">
+                <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center mx-auto mb-5 shadow-sm border-2 border-pink-candy/5">
+                  <Star className="text-pink-deep/30" size={20} />
+                </div>
+                <p className="text-hello-black/40 font-medium italic text-lg font-display">Aucune session prévue dans ce planning...</p>
               </div>
             ) : (
-              <div className="grid gap-6">
-                {sessions.map((session, index) => (
-                  <motion.div
-                    key={session._id || index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`group relative p-6 border-l-4 transition-all duration-300 ${
-                      session.statut === 'termine' 
-                        ? 'bg-green-50/30 border-green-200' 
-                        : 'bg-white shadow-sm hover:shadow-md border-pink-candy hover:translate-x-1'
-                    }`}
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-pink-deep bg-pink-milk px-2 py-0.5">
-                            {session.matiere}
-                          </span>
+              <div className="grid gap-4">
+                {sessions.map((session, index) => {
+                  const subject = subjects.find(s => s.name === session.matiere || s._id === session.matiere)
+                  const startTime = session.debut
+                  const endTime = session.fin
+
+                  return (
+                    <motion.div
+                      key={session._id || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`group relative p-6 rounded-[1.5rem] border-2 transition-all duration-500 ${
+                        session.statut === 'termine' 
+                          ? 'bg-pink-milk/10 border-pink-candy/5 opacity-60' 
+                          : 'bg-white border-pink-candy/5 shadow-sm hover:shadow-xl hover:-translate-y-1'
+                      }`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-5">
+                          <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${
+                            session.statut === 'termine' 
+                              ? 'bg-green-50 text-green-500 border-green-100' 
+                              : 'bg-pink-milk/50 text-pink-deep border-pink-candy/10'
+                          }`}>
+                            <BookOpen size={24} strokeWidth={1.5} />
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-deep bg-pink-milk/50 px-2.5 py-1 rounded-full border-2 border-pink-candy/5">
+                                {session.matiere || subject?.name || 'Matière'}
+                              </span>
+                              {session.statut === 'termine' && (
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 bg-green-50 px-2.5 py-1 rounded-full border-2 border-green-100 flex items-center gap-1.5">
+                                  <CheckCircle size={10} /> Terminé
+                                </span>
+                              )}
+                              <span className={`text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-[0.2em] border-2 ${
+                                session.priority === 'HIGH' ? 'bg-red-50 text-red-400 border-red-100' : 
+                                session.priority === 'MEDIUM' ? 'bg-orange-50 text-orange-400 border-orange-100' : 
+                                'bg-green-50 text-green-400 border-green-100'
+                              }`}>
+                                {session.priority || 'MEDIUM'}
+                              </span>
+                            </div>
+                            <h4 className="text-xl font-black text-hello-black font-display tracking-tight leading-tight">
+                              {startTime ? new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Prévue'}
+                              {endTime ? ` - ${new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                            </h4>
+                            <p className="text-[10px] text-hello-black/30 font-black uppercase tracking-[0.2em]">
+                              {startTime ? new Date(startTime).toLocaleDateString() : ''} • {session.method || 'DEEP_WORK'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between md:justify-end gap-5 md:gap-8">
+                          <div className="flex items-center gap-2 text-hello-black/30 font-black uppercase tracking-[0.2em] text-[10px]">
+                            <Clock size={14} className="text-pink-candy/40" /> 25 min
+                          </div>
+                          {session.statut !== 'termine' && (
+                            <button 
+                              onClick={() => handleStartFocus(session)}
+                              className="chic-button-primary py-3 px-6 text-[10px] flex items-center gap-2.5 group/btn hover:text-hello-black"
+                            >
+                              <Play size={12} fill="currentColor" className="group-hover/btn:scale-110 transition-transform" /> Mode Focus
+                            </button>
+                          )}
                           {session.statut === 'termine' && (
-                            <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-100 px-2 py-0.5">
-                              Terminé ✨
-                            </span>
+                            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border-2 border-green-100">
+                              <CheckCircle size={20} />
+                            </div>
                           )}
                         </div>
-                        <h4 className="text-xl font-black text-hello-black font-display">
-                          {session.title || (session.debut ? `Session de ${new Date(session.debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Prévue')}
-                        </h4>
                       </div>
-                      
-                      <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-2 text-hello-black/40 font-black uppercase tracking-widest text-[10px]">
-                          <Clock size={14} /> {session.duration || 25} min
-                        </div>
-                        {session.statut !== 'termine' && (
-                          <button 
-                            onClick={() => handleStartSession(session)}
-                            className="bg-hello-black text-white px-6 py-3 font-black uppercase tracking-widest text-[10px] shadow-sm hover:shadow-md transition-all flex items-center gap-2"
-                          >
-                            <Play size={12} fill="currentColor" /> Démarrer
-                          </button>
-                        )}
-                        {session.statut === 'termine' && (
-                          <div className="p-3 bg-green-100 text-green-600 rounded-full">
-                            <CheckCircle size={20} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  )
+                })}
               </div>
             )}
           </div>
 
-          {/* Note style Post-it */}
-          <div className="mt-12 md:pl-8">
+          {/* Note style Post-it - Version épurée */}
+          <div className="mt-10">
             <motion.div 
-              whileHover={{ rotate: 0 }}
-              className="bg-pink-milk/30 p-8 border-l-8 border-pink-candy rotate-1 relative max-w-2xl"
+              whileHover={{ scale: 1.01 }}
+              className="bg-[#FDFBF7] p-6 rounded-[1.5rem] border border-pink-candy/10 relative overflow-hidden"
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px]" />
-              <p className="text-hello-black/70 font-serif italic text-lg leading-relaxed">
-                "N'oublie pas de prendre une petite pause thé entre chaque session ! Ta concentration en sera meilleure. 🌸"
+              <div className="absolute top-0 right-0 p-3 opacity-10">
+                <Sparkles size={32} />
+              </div>
+              <p className="text-hello-black/60 font-display italic text-base leading-relaxed relative z-10">
+                "N'oublie pas de prendre une petite pause thé entre chaque session ! Ta concentration en sera meilleure."
               </p>
-              <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-hello-black/30">
-                — Note de PixelCoach
+              <p className="mt-3 text-[9px] font-black uppercase tracking-[0.2em] text-pink-deep/40">
+                — Conseil de ton Studio
               </p>
             </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Focus Mode Modal */}
+      <AnimatePresence>
+        {activeSession && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-hello-black/20 backdrop-blur-xl">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="chic-card p-8 md:p-10 w-full max-w-lg text-center relative overflow-hidden"
+            >
+              {/* Decorative background */}
+              <div className="absolute -top-20 -right-20 w-52 h-52 bg-pink-milk/20 rounded-full blur-3xl transition-transform duration-1000 group-hover:scale-125" />
+              
+              <button 
+                onClick={() => {
+                  setActiveSession(null)
+                  setIsTimerRunning(false)
+                }}
+                className="absolute top-6 right-6 p-2 text-hello-black/20 hover:text-pink-deep transition-all hover:scale-110"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="space-y-8 relative z-10">
+                <div className="inline-flex p-6 bg-pink-milk/50 rounded-[2rem] border-2 border-pink-candy/10 shadow-sm">
+                  <Clock className="text-pink-deep animate-pulse" size={44} strokeWidth={1.5} />
+                </div>
+                
+                <div className="space-y-2.5">
+                  <div className="inline-flex px-4 py-1.5 bg-pink-milk/50 rounded-full border-2 border-pink-candy/10 mb-1.5">
+                    <span className="text-[10px] font-black text-pink-deep uppercase tracking-[0.2em]">
+                      Focus Mode
+                    </span>
+                  </div>
+                  <h3 className="text-3xl font-black text-hello-black font-display tracking-tight">
+                    {subjects.find(s => s._id === (activeSession.subjectId || activeSession.matiere) || s.name === activeSession.matiere)?.name || 'Matière'}
+                  </h3>
+                  <p className="text-hello-black/40 font-medium italic font-display text-lg">
+                    {activeSession.method || 'Pomodoro'} • Reste concentrée ✨
+                  </p>
+                </div>
+
+                <div className="text-7xl md:text-8xl font-black text-hello-black font-display tracking-tighter leading-none">
+                  {formatTime(timeLeft)}
+                </div>
+
+                <div className="space-y-3.5 text-left">
+                  <label className="text-[10px] font-black text-hello-black/40 uppercase tracking-[0.2em] ml-2">
+                    Notes de session
+                  </label>
+                  <textarea
+                    value={sessionNotes}
+                    onChange={(e) => setSessionNotes(e.target.value)}
+                    placeholder="Qu'as-tu accompli pendant cette session ?"
+                    className="chic-input h-28 resize-none py-5"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setIsTimerRunning(!isTimerRunning)}
+                    className={`flex-1 py-4 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all border-2 ${
+                      isTimerRunning 
+                        ? 'bg-orange-50 text-orange-400 border-orange-100 hover:bg-orange-100' 
+                        : 'bg-green-50 text-green-400 border-green-100 hover:bg-green-100'
+                    }`}
+                  >
+                    {isTimerRunning ? 'Pause' : 'Reprendre'}
+                  </button>
+                  <button
+                    onClick={handleCompleteSession}
+                    className="flex-[2] chic-button-primary py-4 text-[10px] hover:text-hello-black"
+                  >
+                    <Zap size={14} fill="currentColor" className="mr-2" /> Terminer maintenant
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-hello-black/20 font-black uppercase tracking-[0.2em] italic">
+                  Chaque minute compte pour ton succès ✨
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

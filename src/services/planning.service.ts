@@ -1,37 +1,106 @@
 import { api } from './api';
+import type { Planning } from '../types/index';
 
 export const planningService = {
-  getAll: async () => {
-    const response = await api.get<any>('/planning');
-    // Le backend peut renvoyer { plannings: [] } ou directement []
-    if (response && response.plannings) return response.plannings;
-    return Array.isArray(response) ? response : [];
+  getAll: async (params?: { page?: number; limit?: number; periode?: string }): Promise<Planning[]> => {
+    const response = await api.get<any>('/planning', { params });
+    
+    // Spec: { success: true, plannings: [ ... ], pagination: { ... } }
+    if (response && response.success && Array.isArray(response.plannings)) {
+      return response.plannings.map((p: any) => ({
+        ...p,
+        _id: p._id || p.id
+      }));
+    }
+    
+    // Fallback pour la robustesse (au cas où l'API change ou renvoie directement un tableau)
+    let plannings: any[] = [];
+    if (Array.isArray(response)) {
+      plannings = response;
+    } else if (response?.data && Array.isArray(response.data)) {
+      plannings = response.data;
+    } else if (response?.data?.plannings && Array.isArray(response.data.plannings)) {
+      plannings = response.data.plannings;
+    }
+
+    return plannings.map((p: any) => ({
+      ...p,
+      _id: p._id || p.id
+    }));
   },
-  getById: async (id: string) => {
-    // L'endpoint /planning/{id} ne semble pas exister sur le backend (404).
-    // On simule getById en récupérant tous les plannings et en filtrant.
+
+  getById: async (id: string): Promise<Planning> => {
+    // Si l'endpoint /planning/:id n'existe pas, on filtre localement
+    try {
+      const response = await api.get<any>(`/planning/${id}`);
+      if (response && response.success && response.data) {
+        return { ...response.data, _id: response.data._id || response.data.id };
+      }
+      if (response && response._id) return response;
+    } catch (e) {
+      console.warn('Endpoint /planning/:id non trouvé, repli sur le filtrage local');
+    }
+
     const allPlannings = await planningService.getAll();
-    const planning = allPlannings.find((p: any) => (p._id || p.id) === id);
+    const planning = allPlannings.find((p: Planning) => p._id === id);
     if (!planning) throw new Error('Planning non trouvé');
     return planning;
   },
-  create: async (data: any) => {
+
+  create: async (data: { 
+    titre: string;
+    periode: string; 
+    nombre: number; 
+    dateDebut: string; 
+    generatedBy: 'AI' | 'LOCAL'; 
+    sessions: any[] 
+  }): Promise<Planning> => {
     const response = await api.post<any>('/planning', data);
-    // On normalise la réponse pour toujours renvoyer l'objet planning
-    if (response && response.planning) return response.planning;
-    if (response && response.data && response.data.planning) return response.data.planning;
-    return response;
+    
+    // Spec: { success: true, data: { ...planning } }
+    let planning: any = response?.data || response;
+
+    return {
+      ...planning,
+      _id: planning?._id || planning?.id
+    };
   },
-  update: async (id: string, data: any) => {
-    return api.put<{ success: boolean; message: string }>(`/planning/${id}`, data);
+
+  generate: async (data: { 
+    titre?: string;
+    periode: string; 
+    nombre?: number; 
+    dateDebut: string;
+    matiereIds?: string[];
+  }): Promise<{ sessions?: any[]; generatedBy: 'AI' | 'LOCAL'; planningId?: string }> => {
+    const response = await api.post<any>('/planning/generate', data);
+    
+    // Spec: { success: true, generatedBy: "AI", data: [sessions...] ou planningId }
+    if (response && response.success) {
+      return { 
+        sessions: Array.isArray(response.data) ? response.data : undefined,
+        planningId: response.planningId || response.data?.planningId,
+        generatedBy: response.generatedBy || 'LOCAL' 
+      };
+    }
+    
+    throw new Error(response?.message || 'Erreur lors de la génération du planning');
   },
+
+  updateSession: async (planningId: string, sessionId: string, data: { statut: string; notes?: string }) => {
+    // Spec: PATCH /api/planning/:id/sessions/:sessionId
+    return api.patch(`/planning/${planningId}/sessions/${sessionId}`, data);
+  },
+
   delete: async (id: string) => {
     return api.delete(`/planning/${id}`);
   },
+
   exportICal: async (id: string) => {
-    return api.getBlob(`/planning/${id}/export.ical`);
+    return api.getBlob(`/planning/${id}/export/ical`);
   },
+
   exportPDF: async (id: string) => {
-    return api.getBlob(`/planning/${id}/export.pdf`);
+    return api.getBlob(`/planning/${id}/export/pdf`);
   }
 };

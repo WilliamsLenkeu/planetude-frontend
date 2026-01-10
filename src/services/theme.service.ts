@@ -10,5 +10,8 @@ export const themeService = {
   },
   set: async (key: string) => {
     return api.put<{ success: boolean; message: string; data: any }>(`/themes/set/${key}`, {});
+  },
+  updateCustom: async (themeConfig: { primary: string; font: string }) => {
+    return api.put<{ success: boolean; message: string; data: any }>('/users/profile', { themeConfig });
   }
 };

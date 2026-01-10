@@ -12,12 +12,25 @@ export interface User {
   avatar?: string;
   gender?: string;
   preferences?: {
-    themes?: string[];
     matieres?: string[];
-    currentTheme?: string;
-    unlockedThemes?: string[];
   };
-  themeConfig?: ThemeConfig;
+  themeConfig?: {
+    primary?: string;
+    font?: string;
+  };
+}
+
+export interface GlobalStats {
+  totalStudyTime: number;
+  masteryRadar: Array<{ subject: string; score: number }>;
+  level: number;
+  xp: number;
+  recentXP?: Array<{ date: string; xp: number }>;
+  // Optionnels pour compatibilité UI
+  averageSessionDuration?: number;
+  mostStudiedSubject?: string;
+  streakDays?: number;
+  completionRate?: number;
 }
 
 export interface Stats {
@@ -34,11 +47,15 @@ export interface Stats {
 
 export interface Planning {
   _id: string;
-  periode: string;
-  dateDebut?: string;
+  titre: string;
+  periode: 'jour' | 'semaine' | 'mois' | 'semestre';
+  nombre: number;
+  dateDebut: string;
+  generatedBy?: 'AI' | 'LOCAL';
   sessions: Session[];
-  createdAt: string;
-  title?: string; // Gardé pour compatibilité UI
+  sessionsCount?: number;
+  createdAt?: string;
+  userId?: string;
 }
 
 export interface Session {
@@ -46,41 +63,35 @@ export interface Session {
   matiere: string;
   debut: string;
   fin: string;
-  statut: 'en_attente' | 'termine' | 'annule';
-  // Champs UI mappés
+  type?: string;
+  method?: string;
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  statut: 'planifie' | 'en_cours' | 'termine' | 'rate';
+  notes?: string;
+  // Champs legacy pour compatibilité UI si nécessaire pendant la transition
+  subjectId?: string;
   id?: string;
-  title?: string;
-  subject?: string;
-  duration?: number;
-}
-
-export interface Badge {
-  _id: string;
-  key: string;
-  name: string;
-  description: string;
-  awardedAt?: string;
-  icon?: string; // Gardé pour compatibilité UI
-}
-
-export interface LoFiTrack {
-  _id: string;
-  title: string;
-  url: string;
-  category: string;
-  thumbnail?: string;
 }
 
 export interface Subject {
   _id: string;
   name: string;
   color: string;
-  icon?: string;
-  totalStudyTime?: number;
+}
+
+export interface LoFiTrack {
+  _id?: string;
+  title: string;
+  artist: string;
+  audioUrl?: string; // API field
+  url: string; // Used in frontend
+  thumbnail?: string;
+  category?: string;
 }
 
 export interface ProgressSession {
-  subjectId: string;
+  matiere?: string;
+  subjectId?: string;
   durationMinutes: number;
   notes?: string;
   date?: string;
@@ -92,14 +103,7 @@ export interface ProgressSummary {
   level: number;
   xpToNextLevel: number;
   rank: string;
-}
-
-export interface GlobalStats {
-  totalStudyTime: number;
-  averageSessionDuration: number;
-  mostStudiedSubject: string;
-  streakDays: number;
-  completionRate?: number;
+  streak: number;
 }
 
 export interface SubjectStats {
@@ -112,6 +116,7 @@ export interface Theme {
   _id?: string;
   key: string;
   name: string;
+  description?: string;
   priceXP?: number;
   price?: number; // Compatibilité
   previewUrl?: string;

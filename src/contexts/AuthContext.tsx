@@ -4,7 +4,7 @@ import type { User } from '../types'
 type AuthContextValue = {
   token: string | null
   user: User | null
-  setAuth: (token: string | null, user: User | null) => void
+  setAuth: (token: string | null, user: User | null, refreshToken?: string | null) => void
   logout: () => void
   isAuthenticated: boolean
   isInitializing: boolean
@@ -14,7 +14,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setTokenState] = useState<string | null>(localStorage.getItem('token'))
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user')
+    try {
+      return savedUser ? JSON.parse(savedUser) : null
+    } catch {
+      return null
+    }
+  })
   const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
@@ -35,13 +42,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (response.ok) {
           const result = await response.json()
-          // L'API renvoie souvent { success: true, data: user }
           const userData = result.data || result
           setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
           setTokenState(storedToken)
-        } else {
-          // Si le token est invalide (401, 404, etc.)
+        } else if (response.status === 401) {
+          // Token expiré, on tente un refresh ? 
+          // Pour l'instant on vide tout pour forcer le login si le refresh échoue
           localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          localStorage.removeItem('refreshToken')
           setTokenState(null)
           setUser(null)
         }
@@ -55,18 +65,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth()
   }, [])
 
-  const setAuth = (t: string | null, u: User | null) => {
+  const setAuth = (t: string | null, u: User | null, rt?: string | null) => {
     if (t) {
       localStorage.setItem('token', t)
     } else {
       localStorage.removeItem('token')
     }
+
+    if (u) {
+      localStorage.setItem('user', JSON.stringify(u))
+    } else {
+      localStorage.removeItem('user')
+    }
+
+    if (rt) {
+      localStorage.setItem('refreshToken', rt)
+    } else if (rt === null) {
+      localStorage.removeItem('refreshToken')
+    }
+
     setTokenState(t)
     setUser(u)
   }
 
   const logout = () => {
-    setAuth(null, null)
+    setAuth(null, null, null)
   }
 
   const isAuthenticated = !!token

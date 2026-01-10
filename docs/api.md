@@ -887,8 +887,6 @@ paths:
 tags:
   - name: Auth
     description: Gestion de l'authentification 🔐
-  - name: Badges
-    description: Système de récompenses et accomplissements 🏆
   - name: Chat
     description: Assistant d'étude IA (Mistral AI) 💬
   - name: LoFi

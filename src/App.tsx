@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, Navigate, NavLink } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -6,7 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { MusicProvider } from './contexts/MusicContext'
 import Header from './components/Header'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LayoutDashboard, Calendar, Sparkles, Trophy, User, LogOut } from 'lucide-react'
+import { LayoutDashboard, Calendar, Trophy, User, LogOut } from 'lucide-react'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 
 // Lazy Loading des pages pour optimiser le poids du bundle initial
@@ -16,7 +16,6 @@ const Register = lazy(() => import('./pages/Register'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Planning = lazy(() => import('./pages/Planning'))
 const PlanningDetail = lazy(() => import('./pages/PlanningDetail'))
-const Chat = lazy(() => import('./pages/Chat'))
 const Progress = lazy(() => import('./pages/Progress'))
 const Reminders = lazy(() => import('./pages/Reminders'))
 const Profile = lazy(() => import('./pages/Profile'))
@@ -42,21 +41,25 @@ export default function App() {
 function AppContent() {
   const { isAuthenticated, isInitializing, logout } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
-    toast.success('À bientôt ! 🎀')
+    navigate('/auth/login')
+    toast.success('Déconnexion réussie ! À bientôt ✨')
   }
 
   // Splash screen pendant l'initialisation
   if (isInitializing) {
-    return <LoadingSpinner fullScreen message="PlanÉtude s'éveille... ✨" />
+    return (
+      <LoadingSpinner fullScreen />
+    )
   }
 
   return (
-    <div className="h-screen w-full font-quicksand text-hello-black relative flex flex-col overflow-hidden bg-clean-beige">
+    <div className="flex flex-col min-h-screen relative font-main transition-colors duration-500" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }}>
       {/* Background Decor - Ambiance Clean & Sophistiquée */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-[#FDFBF7]">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10" style={{ backgroundColor: 'var(--color-background)' }}>
         {/* Soft Animated Gradients */}
         <motion.div 
           animate={{ 
@@ -64,7 +67,8 @@ function AppContent() {
             rotate: [0, 45, 0],
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] bg-pink-candy/10 rounded-full blur-[140px] will-change-transform" 
+          className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full blur-[140px] opacity-10 will-change-transform" 
+          style={{ backgroundColor: 'var(--color-primary)' }}
         />
         <motion.div 
           animate={{ 
@@ -72,14 +76,16 @@ function AppContent() {
             rotate: [0, -30, 0],
           }}
           transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-cloud/20 rounded-full blur-[120px] will-change-transform" 
+          className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] opacity-20 will-change-transform" 
+          style={{ backgroundColor: 'var(--color-secondary)' }}
         />
         <motion.div 
           animate={{ 
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.1, 0.3, 0.1],
           }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[10%] left-[5%] w-[50%] h-[50%] bg-sage-soft/20 rounded-full blur-[110px] will-change-transform" 
+          className="absolute top-[10%] left-[5%] w-[50%] h-[50%] rounded-full blur-[110px] opacity-20 will-change-transform" 
+          style={{ backgroundColor: 'var(--color-primary)' }}
         />
 
         {/* Subtle Texture */}
@@ -87,11 +93,18 @@ function AppContent() {
       </div>
       
       <Toaster 
-        position="top-right" 
+        position="bottom-left" 
         toastOptions={{
-          className: 'glass-card border-2 border-pink-candy/30 text-hello-black font-bold',
-          style: { borderRadius: '1rem', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)' }
-        }} 
+          className: 'chic-card border-2 text-hello-black font-black uppercase tracking-[0.3em] text-[9px]',
+          style: { 
+            borderRadius: '1rem',
+            backgroundColor: 'var(--color-card-bg)',
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-text)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: 'var(--shadow-chic)'
+          }
+        }}
       />
       
       <Header />
@@ -123,7 +136,6 @@ function AppContent() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/planning" element={<Planning />} />
                       <Route path="/planning/:id" element={<PlanningDetail />} />
-                      <Route path="/chat" element={<Chat />} />
                       <Route path="/progress" element={<Progress />} />
                       <Route path="/reminders" element={<Reminders />} />
                       <Route path="/profile" element={<Profile />} />
@@ -152,10 +164,15 @@ function AppContent() {
         <motion.button 
           whileHover={{ scale: 1.1 }}
           onClick={handleLogout}
-          className="fixed bottom-6 left-6 z-50 p-3 bg-white/80 backdrop-blur-md border-2 border-pink-milk text-pink-deep rounded-full shadow-kawaii hidden md:flex items-center gap-2 group"
+          className="fixed bottom-4 left-4 z-50 p-2 backdrop-blur-md border-2 rounded-full shadow-lg hidden md:flex items-center gap-2 group transition-all duration-500"
+          style={{ 
+            backgroundColor: 'var(--color-card-bg)',
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-primary)'
+          }}
         >
-          <LogOut size={20} />
-          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold text-sm whitespace-nowrap">
+          <LogOut size={16} />
+          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold text-[10px] whitespace-nowrap">
             Déconnexion
           </span>
         </motion.button>
@@ -163,12 +180,17 @@ function AppContent() {
 
       {/* Mobile Nav */}
       {isAuthenticated && (
-        <nav className="md:hidden h-14 bg-white/90 backdrop-blur-lg border-t border-pink-milk/50 flex items-center justify-around px-2 pb-safe">
-          <MobileNavItem to="/dashboard" icon={LayoutDashboard} label="Home" />
+        <nav 
+          className="md:hidden h-11 backdrop-blur-lg border-t flex items-center justify-around px-2 pb-safe transition-all duration-500"
+          style={{ 
+            backgroundColor: 'var(--color-card-bg)',
+            borderColor: 'var(--color-border)'
+          }}
+        >
+          <MobileNavItem to="/dashboard" icon={LayoutDashboard} label="Accueil" />
           <MobileNavItem to="/planning" icon={Calendar} label="Plan" />
-          <MobileNavItem to="/chat" icon={Sparkles} label="Coach" highlight />
-          <MobileNavItem to="/progress" icon={Trophy} label="Progrès" />
-          <MobileNavItem to="/profile" icon={User} label="Moi" />
+          <MobileNavItem to="/progress" icon={Trophy} label="Stats" />
+          <MobileNavItem to="/profile" icon={User} label="Profil" />
         </nav>
       )}
     </div>
@@ -178,26 +200,27 @@ function AppContent() {
 const MobileNavItem = ({ to, icon: Icon, label, highlight }: { to: string, icon: any, label: string, highlight?: boolean }) => (
   <NavLink 
     to={to} 
-    className={({ isActive }) => 
-      `flex flex-col items-center justify-center transition-all relative py-1 px-3 rounded-xl ${
-        isActive 
-          ? 'text-pink-deep' 
-          : 'text-hello-black/20 hover:text-pink-candy'
-      }`
+    className={() => 
+      `flex flex-col items-center justify-center transition-all relative py-0.5 px-2 rounded-lg`
     }
+    style={({ isActive }) => ({
+      color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
+      opacity: isActive ? 1 : 0.3
+    })}
   >
     {({ isActive }) => (
       <>
         <div className={`transition-all ${isActive ? 'scale-110' : ''}`}>
-          <Icon size={highlight ? 22 : 18} strokeWidth={isActive ? 2.5 : 2} className={highlight && !isActive ? 'text-pink-candy/60' : ''} />
+          <Icon size={highlight ? 18 : 14} strokeWidth={isActive ? 2.5 : 2} />
         </div>
-        <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-40'}`}>
+        <span className={`text-[7px] font-black uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
           {label}
         </span>
         {isActive && (
           <motion.div 
             layoutId="mobile-nav-dot"
-            className="absolute -bottom-1 w-1 h-1 bg-pink-candy rounded-full"
+            className="absolute -bottom-1 w-1 h-1 rounded-full"
+            style={{ backgroundColor: 'var(--color-primary)' }}
           />
         )}
       </>

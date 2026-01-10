@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react'
-import { User as UserIcon, Mail, Bell, Star, Edit2, Lock, Save, LogOut, Camera, ShieldCheck } from 'lucide-react'
+import { User as UserIcon, Mail, Star, Edit2, Lock, Save, LogOut, Camera, ShieldCheck, Palette, Check, Terminal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
+import { THEMES } from '../constants/themes'
 import { userService } from '../services/user.service'
 import toast from 'react-hot-toast'
 import type { User } from '../types/index'
 import { motion } from 'framer-motion'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { devConsole } from '../utils/devConsole'
 
 export default function Profile() {
   const { logout } = useAuth()
+  const { applyThemeById, currentThemeId } = useTheme()
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isDevMode, setIsDevMode] = useState(localStorage.getItem('dev_mode') === 'true')
   
   const [editForm, setEditForm] = useState({
     name: '',
@@ -87,232 +92,311 @@ export default function Profile() {
     navigate('/')
   }
 
+  const handleThemeChange = (themeId: string) => {
+    applyThemeById(themeId)
+    toast.success('Ambiance mise à jour ! ✨', {
+      icon: THEMES.find(t => t.id === themeId)?.emoji
+    })
+  }
+
+  const toggleDevMode = () => {
+    const newValue = !isDevMode
+    setIsDevMode(newValue)
+    devConsole.toggle(newValue)
+    if (newValue) {
+      toast.success('Console Dev activée ! 🛠️')
+    } else {
+      toast.success('Console Dev désactivée ! 🌸')
+    }
+  }
+
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="max-w-4xl mx-auto py-6 md:py-10 px-4 relative">
-      {/* Anneaux de classeur décoratifs */}
-      <div className="absolute left-[-10px] top-20 bottom-20 flex flex-col justify-around z-20 pointer-events-none hidden md:flex">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
-        ))}
-      </div>
-
+    <div className="max-w-4xl mx-auto py-3 md:py-6 px-4 relative">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="notebook-page p-6 md:p-12 shadow-2xl relative overflow-hidden"
+        className="chic-card p-5 md:p-8 relative overflow-hidden"
       >
-        {/* En-tête du profil style Polaroid */}
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-10 md:mb-16">
+        {/* Decorative background circle */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-pink-milk/20 rounded-full blur-3xl" />
+        
+        {/* En-tête du profil */}
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-6 md:mb-8 relative z-10">
           <div className="relative group">
-            <div className="w-36 h-44 md:w-48 md:h-56 bg-white p-2 md:p-3 shadow-notebook rotate-[-2deg] transition-transform group-hover:rotate-0 duration-500">
-              <div className="w-full h-28 md:h-40 bg-pink-milk flex items-center justify-center overflow-hidden border border-gray-100">
+            <div className="w-24 h-24 md:w-28 md:h-28 rounded-[1.25rem] bg-pink-milk/30 p-1 overflow-hidden shadow-xl shadow-pink-candy/5 transition-transform duration-500 group-hover:scale-[1.02] border-2 border-white">
+              <div className="w-full h-full rounded-[1.1rem] bg-white flex items-center justify-center overflow-hidden">
                 {user?.avatar ? (
                   <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  <UserIcon className="size-10 md:size-16 text-pink-candy/40" />
+                  <UserIcon className="size-8 md:size-10 text-pink-candy/30" strokeWidth={1.5} />
                 )}
-              </div>
-              <div className="mt-2 md:mt-4 flex flex-col items-center">
-                <p className="font-serif italic text-hello-black/60 text-[10px] md:text-sm">Princesse {user?.name}</p>
-                <div className="mt-1 md:mt-2 h-1 w-8 md:w-12 bg-pink-candy/20 rounded-full" />
               </div>
               {!isEditing && (
                 <button 
                   onClick={() => setIsEditing(true)}
-                  className="absolute inset-0 bg-hello-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                  className="absolute inset-0 bg-hello-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px] rounded-[1.25rem]"
                 >
-                  <Camera className="size-5 md:size-6" />
+                  <Camera className="size-5" />
                 </button>
               )}
             </div>
-            {/* Ruban adhésif pour le Polaroid */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-4 md:w-20 md:h-6 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px] rotate-[-5deg]" />
           </div>
 
-          <div className="flex-1 space-y-3 md:space-y-4 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-2 md:px-3 py-1 bg-pink-milk/50 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest text-pink-deep">
-              <Star className="size-2.5 md:size-3 fill-pink-deep" />
-              Étudiante de Niveau { (user as any)?.gamification?.level || (user as any)?.level || 1 }
+          <div className="flex-1 space-y-2 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-milk/50 rounded-full border-2 border-pink-candy/10">
+              <Star className="size-3 fill-pink-deep" />
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-pink-deep">
+                Étudiante de Niveau { (user as any)?.gamification?.level || (user as any)?.level || 1 }
+              </span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-hello-black italic font-serif leading-none">{user?.name}</h2>
-            <p className="text-hello-black/50 font-display text-base md:text-lg">
-              Progression totale : <span className="text-pink-deep font-black">{ (user as any)?.gamification?.totalXP || (user as any)?.xp || 0 } XP</span>
+            <h2 className="text-2xl md:text-3xl font-black text-hello-black tracking-tight leading-none font-display">{user?.name}</h2>
+            <p className="text-hello-black/40 font-medium italic font-display text-base">
+              Progression totale : <span className="text-pink-deep font-black">{(user as any)?.gamification?.totalXP || (user as any)?.xp || 0} XP</span>
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 relative z-10">
-          <div className="space-y-6 md:space-y-8">
-            <div className="flex items-center gap-3 border-b-2 border-pink-milk pb-2">
-              <ShieldCheck className="size-4 md:size-5 text-pink-deep" />
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-hello-black">Informations</h3>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 relative z-10">
+          <div className="space-y-8">
+            {/* Theme Selection Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 border-b-2 border-pink-milk pb-3">
+                <div className="p-2 bg-pink-milk/50 rounded-xl text-pink-deep border-2 border-pink-candy/5">
+                  <Palette className="size-4" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-hello-black">Ambiance & Style</h3>
+              </div>
 
-            {isEditing ? (
-              <form onSubmit={handleUpdateProfile} className="space-y-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Nom d'étudiante</label>
-                  <input 
-                    type="text"
-                    value={editForm.name}
-                    onChange={e => setEditForm({...editForm, name: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-2 text-hello-black font-display transition-all"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Genre</label>
-                  <select 
-                    value={editForm.gender}
-                    onChange={e => setEditForm({...editForm, gender: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-2 text-hello-black font-display transition-all"
-                  >
-                    <option value="F">Féminin 🌸</option>
-                    <option value="M">Masculin 🐨</option>
-                    <option value="O">Autre ✨</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Avatar (URL)</label>
-                  <input 
-                    type="text"
-                    value={editForm.avatar}
-                    onChange={e => setEditForm({...editForm, avatar: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-2 text-hello-black font-display transition-all"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <button 
-                    type="submit"
-                    className="flex-1 bg-hello-black text-white py-4 font-black uppercase tracking-widest text-[10px] shadow-notebook hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2"
-                  >
-                    <Save size={14} /> Enregistrer
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setIsEditing(false)}
-                    className="px-6 border-2 border-hello-black text-hello-black py-4 font-black uppercase tracking-widest text-[10px]"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                <div className="group">
-                  <p className="text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Email académique</p>
-                  <div className="flex items-center gap-3 py-2 border-b-2 border-transparent group-hover:border-pink-milk transition-all">
-                    <Mail size={16} className="text-pink-candy" />
-                    <p className="font-display text-hello-black">{user?.email}</p>
-                  </div>
-                </div>
-                
-                <div className="group">
-                  <p className="text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Préférences</p>
-                  <div className="flex items-center gap-3 py-2 border-b-2 border-transparent group-hover:border-pink-milk transition-all">
-                    <Bell size={16} className="text-pink-candy" />
-                    <p className="font-display text-hello-black">
-                      {user?.gender === 'M' ? 'Prince' : user?.gender === 'F' ? 'Princesse' : 'Étudiante'} studieuse ✨
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-4">
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    className="border-2 border-hello-black text-hello-black py-4 font-black uppercase tracking-widest text-[10px] hover:bg-pink-milk transition-all flex items-center justify-center gap-2"
-                  >
-                    <Edit2 size={14} /> Éditer Profil
-                  </button>
-                  <button 
-                    onClick={() => setIsChangingPassword(true)}
-                    className="bg-white border-2 border-pink-milk text-pink-deep py-4 font-black uppercase tracking-widest text-[10px] hover:border-pink-candy transition-all flex items-center justify-center gap-2"
-                  >
-                    <Lock size={14} /> Sécurité
-                  </button>
+              {/* Color Themes */}
+              <div className="space-y-3">
+                <p className="text-[9px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Palette de couleurs</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {THEMES.map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => handleThemeChange(theme.id)}
+                      className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 group ${
+                        currentThemeId === theme.id 
+                          ? 'border-pink-candy bg-pink-milk/10 shadow-sm' 
+                          : 'border-transparent bg-white/50 hover:bg-white hover:border-pink-candy/20'
+                      }`}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full shadow-inner flex items-center justify-center text-sm"
+                        style={{ backgroundColor: theme.colors.primary }}
+                      >
+                        {theme.emoji}
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-hello-black/60 group-hover:text-hello-black">
+                        {theme.name}
+                      </span>
+                      {currentThemeId === theme.id && (
+                        <div className="absolute -top-1 -right-1 bg-pink-candy text-white p-0.5 rounded-full shadow-sm">
+                          <Check size={10} strokeWidth={4} />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 border-b-2 border-pink-milk pb-3">
+                <div className="p-2 bg-pink-milk/50 rounded-xl text-pink-deep border-2 border-pink-candy/5">
+                  <ShieldCheck className="size-4" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-hello-black">Informations</h3>
+              </div>
+
+              {isEditing ? (
+                <form onSubmit={handleUpdateProfile} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Nom d'étudiante</label>
+                    <input 
+                      type="text"
+                      value={editForm.name}
+                      onChange={e => setEditForm({...editForm, name: e.target.value})}
+                      className="chic-input"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Genre</label>
+                    <div className="relative">
+                      <select 
+                        value={editForm.gender}
+                        onChange={e => setEditForm({...editForm, gender: e.target.value})}
+                        className="chic-select"
+                      >
+                        <option value="F">Féminin 🌸</option>
+                        <option value="M">Masculin 🐨</option>
+                        <option value="O">Autre ✨</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Avatar (URL)</label>
+                    <input 
+                      type="text"
+                      value={editForm.avatar}
+                      onChange={e => setEditForm({...editForm, avatar: e.target.value})}
+                      className="chic-input"
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-1">
+                    <button 
+                      type="submit"
+                      className="chic-button-primary flex-1 py-3"
+                    >
+                      <Save size={14} /> Sauvegarder
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="flex-1 bg-pink-milk/50 text-pink-deep px-4 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.3em] hover:bg-pink-candy/20 transition-all border-2 border-pink-candy/10"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-5">
+                    <div className="space-y-1.5 group">
+                      <p className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] flex items-center gap-2">
+                        <UserIcon size={11} className="text-pink-deep" /> Nom d'utilisateur
+                      </p>
+                      <p className="text-lg font-black font-display text-hello-black pl-3 border-l-4 border-pink-milk group-hover:border-pink-candy transition-all duration-300">{user?.name}</p>
+                    </div>
+                    <div className="space-y-1.5 group">
+                      <p className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] flex items-center gap-2">
+                        <Mail size={11} className="text-pink-deep" /> Email
+                      </p>
+                      <p className="text-lg font-black font-display text-hello-black pl-3 border-l-4 border-pink-milk group-hover:border-pink-candy transition-all duration-300 truncate">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="chic-button-primary w-full md:w-auto px-6 py-3"
+                    >
+                      <Edit2 size={12} /> Modifier le profil
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6 md:space-y-8">
-            <div className="flex items-center gap-3 border-b-2 border-pink-milk pb-2">
-              <Lock className="size-4 md:size-5 text-pink-deep" />
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-hello-black">Sécurité</h3>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 border-b-2 border-pink-milk pb-3">
+              <div className="p-2 bg-pink-milk/50 rounded-xl text-pink-deep border-2 border-pink-candy/5">
+                <Lock className="size-4" />
+              </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-hello-black">Sécurité</h3>
             </div>
 
             {isChangingPassword ? (
-              <form onSubmit={handleChangePassword} className="space-y-5 md:space-y-6">
-                <div className="space-y-1">
-                  <label className="text-[9px] md:text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Ancien mot de passe</label>
+              <form onSubmit={handleChangePassword} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Ancien mot de passe</label>
                   <input 
                     type="password"
                     value={passwordForm.oldPassword}
                     onChange={e => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-1.5 md:py-2 text-hello-black font-display transition-all"
+                    className="chic-input"
                     required
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] md:text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Nouveau mot de passe</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Nouveau mot de passe</label>
                   <input 
                     type="password"
                     value={passwordForm.newPassword}
                     onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-1.5 md:py-2 text-hello-black font-display transition-all"
+                    className="chic-input"
                     required
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] md:text-[10px] font-black text-hello-black/40 uppercase tracking-widest ml-1">Confirmer</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.3em] ml-1">Confirmer</label>
                   <input 
                     type="password"
                     value={passwordForm.confirmPassword}
                     onChange={e => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                    className="w-full bg-transparent border-b-2 border-pink-milk focus:border-pink-candy outline-none py-1.5 md:py-2 text-hello-black font-display transition-all"
+                    className="chic-input"
                     required
                   />
                 </div>
-                <div className="flex gap-3 md:gap-4 pt-2 md:pt-4">
+
+                <div className="flex gap-4 pt-1">
                   <button 
                     type="submit"
-                    className="flex-1 bg-hello-black text-white py-3 md:py-4 font-black uppercase tracking-widest text-[9px] md:text-[10px] shadow-notebook hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2"
+                    className="chic-button-primary flex-1 py-3 hover:text-hello-black"
                   >
-                    <Save size={14} /> Mettre à jour
+                    Mettre à jour
                   </button>
                   <button 
-                    type="button" 
+                    type="button"
                     onClick={() => setIsChangingPassword(false)}
-                    className="px-4 md:px-6 border-2 border-hello-black text-hello-black py-3 md:py-4 font-black uppercase tracking-widest text-[9px] md:text-[10px]"
+                    className="flex-1 bg-pink-milk/50 text-pink-deep px-4 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.3em] hover:bg-pink-candy/20 transition-all border-2 border-pink-candy/10"
                   >
                     Annuler
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="bg-pink-milk/20 p-6 md:p-8 border-l-4 md:border-l-8 border-pink-candy rotate-1 relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-14 md:w-16 h-4 md:h-6 bg-pink-candy/10 border border-pink-candy/5 backdrop-blur-[2px]" />
-                <p className="text-hello-black/70 font-serif italic text-xs md:text-sm leading-relaxed">
-                  "Ta sécurité est importante pour moi ! N'hésite pas à changer ton mot de passe régulièrement pour garder ton journal en sécurité. 🌸"
+              <div className="space-y-5">
+                <p className="text-hello-black/40 font-medium italic font-display text-base leading-relaxed">
+                  Garde ton compte en sécurité en changeant régulièrement ton mot de passe. ✨
                 </p>
-                <p className="mt-3 md:mt-4 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-hello-black/30">
-                  — Conseil de PixelCoach
-                </p>
+                <div className="flex flex-col sm:flex-row gap-4 pt-1">
+                  <button 
+                    onClick={() => setIsChangingPassword(true)}
+                    className="chic-card px-6 py-3 font-black text-[9px] uppercase tracking-[0.3em] hover:bg-pink-milk/30 transition-all flex items-center justify-center gap-3 border-2 border-pink-candy/10"
+                  >
+                    <Lock size={12} /> Changer le mot de passe
+                  </button>
+                </div>
               </div>
             )}
 
-            <div className="pt-6 md:pt-10">
+            {/* Dev Mode Section */}
+            <div className="pt-6 border-t-2 border-pink-milk/20">
+              <div className="flex items-center justify-between p-5 bg-pink-milk/10 rounded-[1.25rem] border-2 border-pink-candy/10">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-hello-black/5 flex items-center justify-center text-hello-black/40 border-2 border-white">
+                    <Terminal size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-hello-black">Mode Développeur</h4>
+                    <p className="text-[9px] text-hello-black/40 mt-1 font-medium italic">Pour les fonctionnalités avancées</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={toggleDevMode}
+                  className={`w-12 h-7 rounded-full transition-all duration-500 relative border-2 ${isDevMode ? 'bg-pink-deep border-pink-deep' : 'bg-gray-200 border-gray-200'}`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-500 ${isDevMode ? 'left-6' : 'left-0.5'}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Logout Section */}
+            <div className="pt-3">
               <button 
                 onClick={handleLogout}
-                className="w-full bg-pink-milk text-pink-deep font-black uppercase tracking-[0.2em] text-[9px] md:text-[10px] py-4 md:py-5 hover:bg-pink-candy/20 transition-all flex items-center justify-center gap-2 border-2 border-pink-candy/10"
+                className="w-full bg-red-50 text-red-500 px-6 py-3 rounded-[1.25rem] font-black text-[9px] uppercase tracking-[0.3em] hover:bg-red-100 transition-all flex items-center justify-center gap-3 border-2 border-red-100/50 shadow-sm"
               >
-                <LogOut className="size-3.5 md:size-4" /> Fermer mon carnet
+                <LogOut size={14} /> Se déconnecter
               </button>
             </div>
           </div>

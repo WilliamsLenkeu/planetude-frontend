@@ -1,121 +1,128 @@
 import { Link } from 'react-router-dom'
-import { Sparkles, Coffee, BookOpen, PenTool, Star } from 'lucide-react'
+import { Coffee, BookOpen, Star, Sparkles, Heart, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[85vh] py-10">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative w-full max-w-5xl"
-      >
-        {/* Anneaux de classeur pour l'immersion */}
-        <div className="absolute left-10 top-0 bottom-0 flex flex-col justify-around z-20 pointer-events-none hidden lg:flex">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-100 border border-gray-400/30 shadow-sm" />
-          ))}
-        </div>
-
-        {/* Décorations de bureau */}
+    <div className="min-h-screen relative overflow-hidden bg-[#FFFAFA] flex flex-col items-center justify-center py-20 px-4">
+      {/* Background Ornaments - Design 2.0 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          animate={{ rotate: [0, 5, 0] }}
-          transition={{ duration: 6, repeat: Infinity }}
-          className="absolute -top-10 -right-5 z-30 hidden md:block"
-        >
-          <div className="bg-pink-candy/20 backdrop-blur-sm p-3 rounded-lg border border-pink-candy/10 shadow-sm rotate-12">
-            <PenTool size={32} className="text-pink-deep" />
-          </div>
-        </motion.div>
+          animate={{ 
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] right-[-5%] w-[50%] h-[50%] bg-pink-milk/30 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            x: [0, -40, 0],
+            y: [0, -20, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-cloud/20 rounded-full blur-[100px]" 
+        />
+      </div>
 
-        <div className="notebook-page p-8 md:p-16 relative overflow-hidden shadow-2xl mx-4">
-          {/* Ligne de marge rouge style cahier */}
-          <div className="absolute left-20 top-0 bottom-0 w-[2px] bg-pink-candy/20 hidden md:block" />
-          
-          <div className="relative z-10 space-y-12 md:pl-16">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-milk/50 border border-pink-candy/10 text-pink-deep text-sm font-black uppercase tracking-widest">
-                <Star size={14} className="fill-pink-deep" />
-                Planétude
-              </div>
-              
-              <h1 className="text-5xl md:text-8xl font-black text-hello-black leading-[1.1] tracking-tight">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-full max-w-6xl z-10"
+      >
+        <div className="bg-white/40 backdrop-blur-2xl rounded-[4rem] p-12 md:p-20 border border-white shadow-2xl shadow-black/[0.02] relative overflow-hidden group">
+          {/* Decorative accents */}
+          <div className="absolute top-10 right-10 opacity-20 group-hover:rotate-12 transition-transform duration-1000">
+            <Sparkles size={40} className="text-pink-deep" />
+          </div>
+          <div className="absolute bottom-10 left-10 opacity-10 group-hover:-rotate-12 transition-transform duration-1000">
+            <Heart size={30} className="text-pink-candy" />
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center text-center space-y-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/60 border border-white shadow-sm text-pink-deep text-[10px] font-bold uppercase tracking-[0.3em]"
+            >
+              <div className="w-2 h-2 bg-pink-candy rounded-full animate-pulse" />
+              <Star size={12} className="fill-pink-candy text-pink-candy" />
+              Planétude Studio
+            </motion.div>
+            
+            <div className="space-y-6 max-w-4xl">
+              <h1 className="text-5xl md:text-8xl font-black text-hello-black leading-[0.85] tracking-tight">
                 Ton journal de <br />
-                <span className="text-pink-candy italic font-serif">réussite.</span>
+                <span className="text-pink-deep italic font-serif font-normal">réussite.</span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-hello-black/60 max-w-2xl leading-relaxed font-display">
-                L'esthétique <span className="text-pink-deep underline decoration-pink-candy/30 underline-offset-4">Clean Girl</span> rencontre l'IA pour transformer ta façon d'apprendre. Doux, organisé, et incroyablement efficace.
+              <p className="text-xl md:text-2xl text-hello-black/40 max-w-2xl mx-auto leading-relaxed font-medium italic">
+                L'élégance minimaliste au service de ton ambition. Organise ta vie étudiante avec douceur et intelligence.
               </p>
             </div>
             
-            <div className="flex flex-wrap gap-6">
-              <Link 
-                to="/auth/register" 
-                className="bg-hello-black text-white px-10 py-5 rounded-none shadow-notebook hover:translate-y-[-4px] hover:shadow-2xl transition-all duration-300 font-black uppercase tracking-widest text-sm"
-              >
-                Ouvrir mon carnet ✨
-              </Link>
-              <Link 
-                to="/auth/login" 
-                className="bg-white border-2 border-hello-black text-hello-black px-10 py-5 rounded-none hover:bg-pink-milk transition-all duration-300 font-black uppercase tracking-widest text-sm"
-              >
-                Se connecter
-              </Link>
-            </div>
-
-            {/* Citations style Post-it */}
-            <div className="absolute bottom-10 right-10 hidden xl:block">
-              <motion.div 
-                whileHover={{ rotate: 0 }}
-                className="bg-yellow-100/80 p-6 shadow-sm rotate-3 border-t-4 border-yellow-200 w-48"
-              >
-                <p className="font-serif italic text-yellow-800 text-sm">
-                  "Le succès est la somme de petits efforts répétés jour après jour."
-                </p>
+            <div className="flex flex-wrap justify-center gap-6 pt-4">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link 
+                  to="/auth/register" 
+                  className="bg-hello-black text-white px-10 py-5 rounded-[2rem] font-bold text-sm flex items-center gap-3 shadow-2xl shadow-hello-black/20 hover:bg-pink-deep hover:text-hello-black transition-all duration-500 group"
+                >
+                  Ouvrir mon carnet
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </motion.div>
+              
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link 
+                  to="/auth/login" 
+                  className="bg-white/60 backdrop-blur-md text-hello-black px-10 py-5 rounded-[2rem] font-bold text-sm border border-white shadow-lg hover:bg-white transition-all duration-500"
+                >
+                  Se connecter
+                </Link>
               </motion.div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-5xl px-4">
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-4 relative z-10">
         <FeatureCard 
-          icon={<Sparkles className="text-pink-deep" />}
-          title="PixelCoach IA"
-          description="Ton coach personnel qui comprend tes besoins et adapte ton planning avec douceur."
-          rotate="-1deg"
-        />
-        <FeatureCard 
-          icon={<BookOpen className="text-pink-deep" />}
+          icon={<BookOpen className="text-pink-deep" size={28} strokeWidth={1.5} />}
           title="Organisation"
-          description="Une vision claire de tes sujets, devoirs et rappels dans une interface apaisante."
-          rotate="1deg"
+          description="Une vision claire et apaisante de tes objectifs académiques."
+          delay={0.6}
         />
         <FeatureCard 
-          icon={<Coffee className="text-pink-deep" />}
+          icon={<Coffee className="text-pink-deep" size={28} strokeWidth={1.5} />}
           title="Zen Mode"
-          description="Focalise-toi sur l'essentiel avec nos ambiances LoFi intégrées pour tes sessions."
-          rotate="-0.5deg"
+          description="Focalise-toi sur l'essentiel avec nos ambiances immersives."
+          delay={0.8}
         />
       </div>
     </div>
   )
 }
 
-function FeatureCard({ icon, title, description, rotate }: { icon: React.ReactNode, title: string, description: string, rotate: string }) {
+function FeatureCard({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: number }) {
   return (
     <motion.div 
-      whileHover={{ y: -10, rotate: 0 }}
-      style={{ rotate }}
-      className="bg-white p-10 shadow-notebook border-l-4 border-pink-candy flex flex-col items-center text-center space-y-4"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.8 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      className="bg-white/40 backdrop-blur-xl p-10 rounded-[3.5rem] flex flex-col items-center text-center space-y-4 border border-white shadow-xl shadow-black/[0.01] hover:bg-white/60 transition-all duration-500"
     >
-      <div className="p-4 bg-pink-milk/30 rounded-full">
+      <div className="p-4 bg-white rounded-2xl shadow-sm border border-pink-candy/10">
         {icon}
       </div>
-      <h3 className="text-xl font-black text-hello-black uppercase tracking-wider">{title}</h3>
-      <p className="text-hello-black/60 font-display leading-relaxed">{description}</p>
+      <div className="space-y-2">
+        <h3 className="text-xl font-bold text-hello-black">{title}</h3>
+        <p className="text-sm text-hello-black/40 font-medium italic leading-relaxed">{description}</p>
+      </div>
     </motion.div>
   )
 }

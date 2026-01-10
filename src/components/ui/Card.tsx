@@ -9,21 +9,17 @@ interface CardProps extends HTMLMotionProps<'div'> {
 
 export function Card({ children, className = '', variant = 'default', ...props }: CardProps) {
   const variants = {
-    default: 'notebook-page border-l-4 border-pink-candy',
-    pink: 'notebook-page border-l-4 border-pink-candy bg-pink-milk/5',
-    gold: 'notebook-page border-l-4 border-soft-gold bg-soft-gold/5',
-    white: 'notebook-page border-l-4 border-white'
+    default: 'chic-card',
+    pink: 'bg-pink-milk/10 border-2 border-pink-candy/10 shadow-sm',
+    gold: 'bg-soft-gold/5 border-2 border-soft-gold/20 shadow-sm',
+    white: 'bg-white border-2 border-gray-100 shadow-sm'
   }
 
   return (
     <motion.div
-      className={`p-6 ${variants[variant]} ${className}`}
+      className={`p-4 rounded-2xl relative overflow-hidden transition-all duration-500 ${variants[variant]} ${className}`}
       {...props}
     >
-      {/* Subtle Paper Clip for some variants */}
-      {(variant === 'pink' || variant === 'gold') && (
-        <div className="absolute -top-3 right-8 w-6 h-10 bg-gray-300/30 rounded-full border-2 border-gray-400/20 z-10" />
-      )}
       {children}
     </motion.div>
   )

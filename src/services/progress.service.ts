@@ -9,25 +9,20 @@ export const progressService = {
     return api.post<{ success: boolean; message: string; data: { xpGained: number; newTotalXP: number } }>('/progress', data);
   },
   getSummary: async (): Promise<ProgressSummary> => {
-    // L'endpoint /progress/summary renvoie une erreur 500 sur le serveur.
-    // On récupère les infos depuis le profil utilisateur qui contient les mêmes données de gamification.
-    const response = await api.get<any>('/users/profile');
-    const userData = response.data || response;
-    const g = userData.gamification || {};
+    const response = await api.get<any>('/progress/summary');
+    // Le backend peut renvoyer directement les données ou les wrapper dans .data
+    const d = response?.data || response;
     
-    // Calcul du rang basé sur le niveau
-    const getRank = (level: number) => {
-      if (level >= 10) return "Maîtresse des Études 👑";
-      if (level >= 5) return "Étoile Brillante ✨";
-      if (level >= 2) return "Apprentie Studieuse 🎀";
-      return "Débutante Adorable 🍭";
-    };
+    if (!d) {
+      throw new Error('Données de progression introuvables');
+    }
 
     return {
-      totalXP: g.totalXP || 0,
-      level: g.level || 1,
-      xpToNextLevel: (g.level || 1) * 100 - (g.xp || 0),
-      rank: getRank(g.level || 1)
+      totalXP: d.totalXP,
+      level: d.level,
+      xpToNextLevel: d.xpToNextLevel,
+      rank: d.rank,
+      streak: d.streak
     };
   }
 };

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 
 interface StatCardProps {
   icon: ReactNode
@@ -9,26 +9,36 @@ interface StatCardProps {
   className?: string
 }
 
-export function StatCard({ 
+export const StatCard = memo(({ 
   icon, 
   label, 
   value, 
   subValue, 
-  color = 'bg-pink-milk',
+  color = 'rgba(var(--color-primary-rgb), 0.1)',
   className = ''
-}: StatCardProps) {
+}: StatCardProps) => {
   return (
-    <div className={`notebook-page p-6 text-center space-y-2 border-l-4 border-pink-candy ${className}`}>
-      <div className={`${color} w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-white/50`}>
-        {icon}
+    <div className={`chic-card p-4 flex flex-col items-center justify-center text-center space-y-2 group transition-all duration-500 hover:-translate-y-1 ${className}`}>
+      <div 
+        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 border-2 shadow-sm"
+        style={{ 
+          backgroundColor: color,
+          borderColor: 'var(--color-border)'
+        }}
+      >
+        <div style={{ color: 'var(--color-primary)' }}>
+          {icon}
+        </div>
       </div>
-      <p className="text-[10px] font-black text-hello-black/30 uppercase tracking-[0.2em]">{label}</p>
-      <p className="text-2xl font-black text-hello-black font-display">{value}</p>
-      {subValue && (
-        <p className="text-[10px] text-pink-deep/40 font-black uppercase tracking-widest italic">
-          {subValue}
-        </p>
-      )}
+      <div className="space-y-0.5">
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30" style={{ color: 'var(--color-text)' }}>{label}</p>
+        <p className="text-lg font-black font-display tracking-tight leading-tight" style={{ color: 'var(--color-text)' }}>{value}</p>
+        {subValue && (
+          <p className="text-[8px] font-black uppercase tracking-[0.3em] italic opacity-50" style={{ color: 'var(--color-primary)' }}>
+            {subValue}
+          </p>
+        )}
+      </div>
     </div>
   )
-}
+})

@@ -11,7 +11,8 @@ export const authService = {
     return api.post<{ token: string; refreshToken: string; user: any }>('/auth/google', { idToken });
   },
   refreshToken: async () => {
-    return api.post<{ success: boolean; accessToken: string }>('/auth/refresh', {});
+    const refreshToken = localStorage.getItem('refreshToken');
+    return api.post<{ success: boolean; token: string }>('/auth/refresh', { refreshToken });
   },
   logout: () => {
     localStorage.removeItem('token');
