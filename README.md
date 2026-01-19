@@ -1,73 +1,150 @@
-# React + TypeScript + Vite
+# 🌸 PlanÉtude - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application frontend React/TypeScript/Vite pour la gestion d'études avec gamification.
 
-Currently, two official plugins are available:
+## 🚀 Démarrage Rapide
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Configuration Environnement
 
-## React Compiler
+1. **Copiez le fichier exemple :**
+   ```bash
+   cp .env.example .env
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Modifiez les variables selon votre environnement :**
+   ```env
+   # Pour développement local
+   VITE_API_URL=http://localhost:3001/api
 
-## Expanding the ESLint configuration
+   # Pour production
+   # VITE_API_URL=https://plan-etude.koyeb.app/api
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation & Lancement
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Installation des dépendances
+pnpm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Démarrage en développement
+pnpm dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build de production
+pnpm build
+
+# Aperçu production
+pnpm preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔧 Configuration Environnement
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Variables d'Environnement
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Variable | Description | Défaut | Obligatoire |
+|----------|-------------|---------|-------------|
+| `VITE_API_URL` | URL complète de l'API | `http://localhost:3001/api` | ✅ |
+| `VITE_DEV_MODE` | Active les logs détaillés | `false` | ❌ |
+| `VITE_APP_NAME` | Nom de l'application | `PlanÉtude` | ❌ |
+
+### Environnements
+
+- **`.env`** : Configuration locale (ignoré par git)
+- **`.env.example`** : Modèle de configuration
+- **`.env.production`** : Configuration production (optionnel)
+
+## 🏗️ Architecture
+
 ```
+src/
+├── components/          # Composants réutilisables
+├── pages/              # Pages de l'application
+├── services/           # Services API
+├── contexts/           # Contextes React (Auth, Theme, Music)
+├── types/              # Types TypeScript
+├── utils/              # Utilitaires
+├── constants/          # Constantes
+└── assets/             # Assets statiques
+```
+
+### Fonctionnalités Principales
+
+- ✅ Authentification JWT
+- ✅ Gestion des plannings d'étude
+- ✅ Suivi des progrès avec gamification
+- ✅ Gestion des matières
+- ✅ Thèmes personnalisables
+- ✅ Musique LoFi intégrée
+- ✅ Interface responsive
+- ✅ Animations Framer Motion
+
+## 🛠️ Technologies
+
+- **React 19** - Framework UI
+- **TypeScript** - Typage statique
+- **Vite** - Build tool
+- **React Router 7** - Routing
+- **Tailwind CSS 4** - Styling
+- **Framer Motion** - Animations
+- **React Query** - Gestion état serveur
+- **Socket.io** - Temps réel
+- **Recharts** - Graphiques
+
+## 📝 Scripts Disponibles
+
+```bash
+pnpm dev          # Serveur développement
+pnpm build        # Build production
+pnpm preview      # Aperçu production
+pnpm lint         # Linting ESLint
+```
+
+## 🔐 Authentification
+
+L'application utilise un système JWT avec :
+
+- **Login/Register** : Authentification classique
+- **Google OAuth** : Connexion Google (optionnel)
+- **Refresh Tokens** : Gestion automatique des sessions
+- **Middleware Admin** : Protection des routes admin
+
+## 🎨 Thèmes & UI
+
+- **Design Kawaii** : Style mignon et coloré
+- **Thèmes dynamiques** : Changement en temps réel
+- **Animations fluides** : Framer Motion
+- **Responsive** : Adapté mobile/desktop
+- **Dark/Light mode** : Support natif
+
+## 🔌 API Integration
+
+L'application communique avec l'API backend via :
+
+- **Services typés** : Un service par domaine métier
+- **React Query** : Cache et synchronisation
+- **Error handling** : Gestion d'erreurs centralisée
+- **Auth automatique** : Injection du token JWT
+
+## 🚀 Déploiement
+
+### Vercel (Recommandé)
+
+```bash
+# Installation Vercel CLI
+npm i -g vercel
+
+# Déploiement
+vercel
+
+# Configuration production
+vercel env add VITE_API_URL
+```
+
+### Configuration Build
+
+- **SPA routing** : Configuré pour React Router
+- **Asset optimization** : Images, CSS, JS optimisés
+- **PWA ready** : Structure prête pour PWA
+
+---
+
+*Voir aussi : [Backend API](../PlanEtudeBackend/README.md)*

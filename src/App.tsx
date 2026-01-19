@@ -6,21 +6,24 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { MusicProvider } from './contexts/MusicContext'
 import Header from './components/Header'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LayoutDashboard, Calendar, Trophy, User, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
+import EnvDebug from './components/EnvDebug'
 
 // Lazy Loading des pages pour optimiser le poids du bundle initial
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
+const SetupWizard = lazy(() => import('./pages/SetupWizard'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Planning = lazy(() => import('./pages/Planning'))
 const PlanningDetail = lazy(() => import('./pages/PlanningDetail'))
-const Progress = lazy(() => import('./pages/Progress'))
+
 const Reminders = lazy(() => import('./pages/Reminders'))
 const Profile = lazy(() => import('./pages/Profile'))
 const LoFi = lazy(() => import('./pages/LoFi'))
 const Subjects = lazy(() => import('./pages/Subjects'))
+const Analytics = lazy(() => import('./pages/Analytics'))
 const Themes = lazy(() => import('./pages/Themes'))
 const MiniPlayer = lazy(() => import('./components/MiniPlayer'))
 
@@ -47,6 +50,12 @@ function AppContent() {
     logout()
     navigate('/auth/login')
     toast.success('Déconnexion réussie ! À bientôt ✨')
+  }
+
+  // Check if setup is completed
+  const isSetupComplete = () => {
+    const setupData = localStorage.getItem('setupComplete')
+    return setupData !== null
   }
 
   // Splash screen pendant l'initialisation
@@ -92,6 +101,7 @@ function AppContent() {
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
       </div>
       
+      <EnvDebug />
       <Toaster 
         position="bottom-left" 
         toastOptions={{
@@ -130,17 +140,24 @@ function AppContent() {
                       <Route path="/auth/register" element={<Register />} />
                       <Route path="*" element={<Navigate to="/auth/login" replace />} />
                     </>
+                  ) : !isSetupComplete() ? (
+                    // SETUP WIZARD - Première connexion
+                    <>
+                      <Route path="/setup" element={<SetupWizard />} />
+                      <Route path="*" element={<Navigate to="/setup" replace />} />
+                    </>
                   ) : (
                     // STACK AUTHENTIFIÉ
                     <>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/planning" element={<Planning />} />
                       <Route path="/planning/:id" element={<PlanningDetail />} />
-                      <Route path="/progress" element={<Progress />} />
+
                       <Route path="/reminders" element={<Reminders />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/lofi" element={<LoFi />} />
                       <Route path="/subjects" element={<Subjects />} />
+                      <Route path="/analytics" element={<Analytics />} />
                       <Route path="/themes" element={<Themes />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </>
@@ -187,40 +204,36 @@ function AppContent() {
             borderColor: 'var(--color-border)'
           }}
         >
-          <MobileNavItem to="/dashboard" icon={LayoutDashboard} label="Accueil" />
-          <MobileNavItem to="/planning" icon={Calendar} label="Plan" />
-          <MobileNavItem to="/progress" icon={Trophy} label="Stats" />
-          <MobileNavItem to="/profile" icon={User} label="Profil" />
+          <MobileNavItem to="/dashboard" label="Accueil" />
+          <MobileNavItem to="/planning" label="Plan" />
+          <MobileNavItem to="/profile" label="Profil" />
         </nav>
       )}
     </div>
   )
 }
 
-const MobileNavItem = ({ to, icon: Icon, label, highlight }: { to: string, icon: any, label: string, highlight?: boolean }) => (
-  <NavLink 
-    to={to} 
-    className={() => 
+const MobileNavItem = ({ to, label }: { to: string, label: string }) => (
+  <NavLink
+    to={to}
+    className={() =>
       `flex flex-col items-center justify-center transition-all relative py-0.5 px-2 rounded-lg`
     }
     style={({ isActive }) => ({
-      color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
-      opacity: isActive ? 1 : 0.3
+      color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+      opacity: isActive ? 1 : 0.6
     })}
   >
     {({ isActive }) => (
       <>
-        <div className={`transition-all ${isActive ? 'scale-110' : ''}`}>
-          <Icon size={highlight ? 18 : 14} strokeWidth={isActive ? 2.5 : 2} />
-        </div>
-        <span className={`text-[7px] font-black uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+        <span className={`text-[10px] font-medium uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
           {label}
         </span>
         {isActive && (
-          <motion.div 
+          <motion.div
             layoutId="mobile-nav-dot"
-            className="absolute -bottom-1 w-1 h-1 rounded-full"
-            style={{ backgroundColor: 'var(--color-primary)' }}
+            className="absolute -bottom-1 w-4 h-0.5 rounded-full"
+            style={{ backgroundColor: 'var(--color-accent)' }}
           />
         )}
       </>

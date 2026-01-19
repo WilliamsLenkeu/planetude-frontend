@@ -36,7 +36,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await fetch('https://plan-etude.koyeb.app/api/users/profile', {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const response = await fetch(`${API_URL}/users/profile`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         })
         
