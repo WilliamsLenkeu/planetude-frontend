@@ -34,7 +34,7 @@ export default function SetupWizard() {
           color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
         })
       }
-      await userService.updateProfile({ preferences: { matieres: validMatieres } })
+      await userService.updateProfile({ preferences: { matieres: validMatieres, hasCompletedSetup: true } })
       localStorage.setItem('setupComplete', 'true')
       toast.success('Configuration terminée')
       navigate('/dashboard')
@@ -47,7 +47,7 @@ export default function SetupWizard() {
 
   const handleSkip = async () => {
     try {
-      await userService.updateProfile({ preferences: { matieres: [] } })
+      await userService.updateProfile({ preferences: { matieres: [], hasCompletedSetup: true } })
     } catch {
       // Ignore si l'API échoue
     }

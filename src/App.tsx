@@ -40,7 +40,7 @@ export default function App() {
 }
 
 function AppContent() {
-  const { isAuthenticated, isInitializing, logout } = useAuth()
+  const { isAuthenticated, isInitializing, logout, user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -50,7 +50,10 @@ function AppContent() {
     toast.success('À bientôt !')
   }
 
-  const isSetupComplete = () => localStorage.getItem('setupComplete') !== null
+  const isSetupComplete = () => {
+    if (user?.preferences?.hasCompletedSetup) return true
+    return localStorage.getItem('setupComplete') !== null
+  }
 
   if (isInitializing) {
     return <LoadingSpinner fullScreen />

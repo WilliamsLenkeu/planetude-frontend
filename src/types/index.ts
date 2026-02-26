@@ -13,6 +13,7 @@ export interface User {
   gender?: string;
   preferences?: {
     matieres?: string[];
+    hasCompletedSetup?: boolean;
   };
   themeConfig?: {
     primary?: string;
