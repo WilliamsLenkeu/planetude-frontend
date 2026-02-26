@@ -227,7 +227,7 @@ export default function Planning() {
             onChange={(e) => setDateDebut(e.target.value)}
             required
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
                 Période
@@ -258,13 +258,13 @@ export default function Planning() {
               <label className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
                 Matières (optionnel)
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-32 sm:max-h-40 overflow-y-auto overscroll-contain pr-1 -mr-1">
                 {subjects.map((s) => (
                   <button
                     key={s._id}
                     type="button"
                     onClick={() => toggleMatiere(s._id)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                    className="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0"
                     style={{
                       backgroundColor: matiereIds.includes(s._id)
                         ? s.color || '#3498db'
@@ -281,7 +281,7 @@ export default function Planning() {
               </p>
             </div>
           )}
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <Button
               type="button"
               variant="ghost"
