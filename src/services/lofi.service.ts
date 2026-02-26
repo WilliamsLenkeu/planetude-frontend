@@ -12,17 +12,22 @@ function toTrack(raw: any): LoFiTrack {
   };
 }
 
+function extractArray(res: any, dataKey = 'data'): any[] {
+  if (!res) return [];
+  const arr = res[dataKey] ?? res.data ?? res;
+  return Array.isArray(arr) ? arr : arr?.tracks ? arr.tracks : [];
+}
+
 export const lofiService = {
   getAll: async (category?: string): Promise<LoFiTrack[]> => {
     const res = await api.get<any>('/lofi', { params: category ? { category } : undefined });
-    const data = res?.data ?? res;
-    const arr = Array.isArray(data) ? data : [];
+    const arr = extractArray(res);
     return arr.map(toTrack);
   },
   getCategories: async (): Promise<string[]> => {
     const res = await api.get<any>('/lofi/categories');
-    const data = res?.data ?? res;
-    return Array.isArray(data) ? data : [];
+    const arr = res?.data ?? res;
+    return Array.isArray(arr) ? arr : [];
   },
   addTrack: async (trackData: Partial<LoFiTrack>) => {
     return api.post<any>('/lofi', trackData);

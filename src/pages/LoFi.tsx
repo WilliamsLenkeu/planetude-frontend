@@ -12,7 +12,7 @@ export default function LoFi() {
   const [category, setCategory] = useState<string | ''>('')
   const { playTrack, currentTrack, isPlaying, setPlaylist } = useMusic()
 
-  const { data: tracks, isLoading } = useQuery({
+  const { data: tracks, isLoading, isError, error } = useQuery({
     queryKey: ['lofi', category],
     queryFn: () => lofiService.getAll(category || undefined),
   })
@@ -128,8 +128,17 @@ export default function LoFi() {
           </div>
         ) : (
           <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
-            <p className="text-sm">Aucune piste disponible</p>
-            <p className="text-xs mt-2">Les pistes peuvent être ajoutées via le seed admin.</p>
+            {isError ? (
+              <>
+                <p className="text-sm font-medium">Erreur de chargement</p>
+                <p className="text-xs mt-2">{(error as any)?.message || 'Vérifiez que vous êtes connecté et que le backend est démarré.'}</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">Aucune piste disponible</p>
+                <p className="text-xs mt-2">Les pistes peuvent être ajoutées via le seed admin.</p>
+              </>
+            )}
           </div>
         )}
       </Card>
