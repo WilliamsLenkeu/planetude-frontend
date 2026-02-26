@@ -1,17 +1,29 @@
 import { api } from './api';
 
+const unwrapAuthResponse = (res: any) => {
+  const data = res?.data ?? res;
+  return {
+    token: data?.token ?? res?.token,
+    refreshToken: data?.refreshToken ?? res?.refreshToken,
+    user: data?.user ?? res?.user
+  };
+};
+
 export const authService = {
   login: async (credentials: any) => {
-    return api.post<{ token: string; refreshToken: string; user: any }>('/auth/login', credentials);
+    const res = await api.post<any>('/auth/login', credentials);
+    return unwrapAuthResponse(res);
   },
   register: async (userData: { name: string; email: string; password: string; gender?: 'M' | 'F' }) => {
-    return api.post<{ token: string; refreshToken: string; user: any }>('/auth/register', {
+    const res = await api.post<any>('/auth/register', {
       ...userData,
       gender: userData.gender ?? 'M'
     });
+    return unwrapAuthResponse(res);
   },
   googleLogin: async (idToken: string) => {
-    return api.post<{ token: string; refreshToken: string; user: any }>('/auth/google', { idToken });
+    const res = await api.post<any>('/auth/google', { idToken });
+    return unwrapAuthResponse(res);
   },
   refreshToken: async () => {
     const refreshToken = localStorage.getItem('refreshToken');
