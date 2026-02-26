@@ -73,7 +73,9 @@ export const planningService = {
     dateDebut: string;
     matiereIds?: string[];
   }): Promise<{ sessions?: any[]; generatedBy: 'AI' | 'LOCAL'; planningId?: string }> => {
-    const response = await api.post<any>('/planning/generate', data);
+    const { matiereIds, ...rest } = data;
+    const body = { ...rest, matieres: matiereIds };
+    const response = await api.post<any>('/planning/generate', body);
     
     // Spec: { success: true, generatedBy: "AI", data: [sessions...] ou planningId }
     if (response && response.success) {
