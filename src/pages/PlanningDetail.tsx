@@ -1,21 +1,39 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { planningService } from '../services/planning.service'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { ArrowLeft, Clock } from 'lucide-react'
+import { ArrowLeft, Clock, Trash2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function PlanningDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: planning, isLoading } = useQuery({
     queryKey: ['planning', id],
     queryFn: () => planningService.getById(id!),
     enabled: !!id,
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => planningService.delete(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plannings'] })
+      toast.success('Planning supprimé')
+      navigate('/planning')
+    },
+    onError: (err: any) => toast.error(err?.message || 'Erreur lors de la suppression'),
+  })
+
+  const handleDelete = () => {
+    if (planning && window.confirm(`Supprimer le planning "${planning.titre}" ?`)) {
+      deleteMutation.mutate()
+    }
+  }
 
   if (isLoading) {
     return <LoadingSpinner fullScreen />
@@ -52,7 +70,19 @@ export default function PlanningDetail() {
             {new Date(planning.dateDebut).toLocaleDateString('fr-FR')}
           </p>
         </div>
-        <Badge variant="primary">{planning.sessions?.length || 0} sessions</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="primary">{planning.sessions?.length || 0} sessions</Badge>
+          <Button
+            variant="ghost"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            style={{ color: '#DC2626' }}
+            className="hover:!bg-red-50"
+          >
+            <Trash2 size={18} />
+            Supprimer
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">

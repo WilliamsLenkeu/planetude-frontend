@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { planningService } from '../services/planning.service'
@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { PageHeader } from '../components/PageHeader'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { Plus, Calendar, Sparkles } from 'lucide-react'
+import { Plus, Calendar, Sparkles, MoreHorizontal, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const PERIODES = [
@@ -31,6 +31,8 @@ export default function Planning() {
   const [periode, setPeriode] = useState<'jour' | 'semaine' | 'mois' | 'semestre'>('semaine')
   const [nombre, setNombre] = useState(1)
   const [matiereIds, setMatiereIds] = useState<string[]>([])
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const { data: plannings, isLoading } = useQuery({
     queryKey: ['plannings'],
@@ -40,6 +42,16 @@ export default function Planning() {
   const { data: subjects } = useQuery({
     queryKey: ['subjects'],
     queryFn: () => subjectService.getAll(),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => planningService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plannings'] })
+      toast.success('Planning supprimé')
+      setOpenMenuId(null)
+    },
+    onError: (err: any) => toast.error(err?.message || 'Erreur lors de la suppression'),
   })
 
   const generateMutation = useMutation({
@@ -83,6 +95,24 @@ export default function Planning() {
     )
   }
 
+  const handleDelete = (e: React.MouseEvent, planning: { _id: string; titre: string }) => {
+    e.stopPropagation()
+    if (window.confirm(`Supprimer le planning "${planning.titre}" ?`)) {
+      deleteMutation.mutate(planning._id)
+    }
+    setOpenMenuId(null)
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (ev: MouseEvent) => {
+      const target = ev.target as Node
+      const isInside = Object.values(menuRefs.current).some((el) => el?.contains(target))
+      if (!isInside) setOpenMenuId(null)
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
@@ -108,8 +138,8 @@ export default function Planning() {
               hover
               onClick={() => navigate(`/planning/${planning._id}`)}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
                     {planning.titre}
                   </h3>
@@ -118,7 +148,42 @@ export default function Planning() {
                     {new Date(planning.dateDebut).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
-                <Badge variant="primary">{planning.sessions?.length || 0} sessions</Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="primary">{planning.sessions?.length || 0} sessions</Badge>
+                  <div
+                    className="relative"
+                    ref={(el) => { menuRefs.current[planning._id] = el }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setOpenMenuId((prev) => (prev === planning._id ? null : planning._id))
+                      }}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-[var(--color-bg-tertiary)]"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {openMenuId === planning._id && (
+                      <div
+                        className="absolute right-0 top-full mt-1 py-1 surface shadow-lg z-10 min-w-[140px]"
+                        style={{ borderRadius: 'var(--radius-sm)' }}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => handleDelete(e, planning)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors hover:bg-[var(--color-bg-tertiary)]"
+                          style={{ color: 'var(--color-text)' }}
+                        >
+                          <Trash2 size={16} />
+                          Supprimer
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </Card>
           ))}
