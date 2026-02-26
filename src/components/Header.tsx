@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Calendar, BookOpen, BarChart3, Music, Palette } from 'lucide-react'
+import { LayoutDashboard, Calendar, BookOpen, BarChart3, Music, Palette, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Avatar } from './ui/Avatar'
 import { cn } from '../utils/cn'
@@ -14,8 +14,13 @@ const navItems = [
 ]
 
 export default function Header() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/auth/login')
+  }
 
   return (
     <header
@@ -64,15 +69,25 @@ export default function Header() {
               ))}
             </nav>
 
-            <button
-              onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors"
-            >
-              <Avatar
-                initials={user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
-                size="sm"
-              />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleLogout}
+                className="md:hidden p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                title="Déconnexion"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                <LogOut size={20} />
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors"
+              >
+                <Avatar
+                  initials={user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                  size="sm"
+                />
+              </button>
+            </div>
           </>
         )}
       </div>

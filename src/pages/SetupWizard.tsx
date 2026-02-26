@@ -5,12 +5,14 @@ import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { subjectService } from '../services/subject.service'
 import { userService } from '../services/user.service'
+import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, LogOut } from 'lucide-react'
 
 export default function SetupWizard() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const [matieres, setMatieres] = useState<string[]>([''])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -41,6 +43,23 @@ export default function SetupWizard() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSkip = async () => {
+    try {
+      await userService.updateProfile({ preferences: { matieres: [] } })
+    } catch {
+      // Ignore si l'API échoue
+    }
+    localStorage.setItem('setupComplete', 'true')
+    toast.success('Vous pourrez ajouter des matières plus tard')
+    navigate('/dashboard')
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/auth/login')
+    toast.success('À bientôt !')
   }
 
   return (
@@ -81,6 +100,21 @@ export default function SetupWizard() {
             <Button onClick={handleSubmit} isLoading={isLoading} className="w-full">
               Terminer
             </Button>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <Button variant="ghost" onClick={handleSkip} className="flex-1 text-sm">
+                Passer cette étape
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="flex-1 text-sm flex items-center justify-center gap-2"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                <LogOut size={16} />
+                Se déconnecter
+              </Button>
+            </div>
           </div>
         </Card>
       </motion.div>
