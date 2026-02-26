@@ -7,19 +7,23 @@ export interface Reminder {
   planningId?: string;
 }
 
+/** /api/reminders n'existe pas (module non implémenté côté backend). */
 export const reminderService = {
-  getAll: async () => {
-    const response = await api.get<any>('/reminders');
-    return response?.data || response || [];
+  getAll: async (): Promise<Reminder[]> => {
+    try {
+      const response = await api.get<any>('/reminders');
+      return response?.data ?? response ?? [];
+    } catch {
+      return [];
+    }
   },
-  create: async (data: Partial<Reminder>) => {
-    const response = await api.post<any>('/reminders', data);
-    return response?.data || response;
+  create: async (_data: Partial<Reminder>) => {
+    throw new Error('Module rappels non implémenté côté API');
   },
-  update: async (id: string, data: Partial<Reminder>) => {
-    return api.put<{ success: boolean; message: string }>(`/reminders/${id}`, data);
+  update: async (_id: string, _data: Partial<Reminder>) => {
+    throw new Error('Module rappels non implémenté côté API');
   },
-  delete: async (id: string) => {
-    return api.delete(`/reminders/${id}`);
+  delete: async (_id: string) => {
+    throw new Error('Module rappels non implémenté côté API');
   }
 };

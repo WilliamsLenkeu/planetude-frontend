@@ -1,49 +1,35 @@
 import { api } from './api';
 import type { GlobalStats } from '../types';
 
+/** /api/stats n'est pas monté. Utilise /progress/summary uniquement. */
 export const statsService = {
   getGlobalStats: async (): Promise<GlobalStats> => {
-    const [summaryRes, subjectsRes] = await Promise.all([
-      api.get<any>('/progress/summary'),
-      api.get<any>('/stats/subjects')
-    ]);
-
-    const summary = summaryRes?.data || summaryRes;
-    const subjects = subjectsRes?.data || subjectsRes || [];
+    const summaryRes = await api.get<any>('/progress/summary');
+    const summary = summaryRes?.data ?? summaryRes;
 
     if (!summary) {
       throw new Error('Résumé de progression introuvable');
     }
 
-    // Calculer le temps total à partir des matières
-    const totalStudyTime = Array.isArray(subjects) 
-      ? subjects.reduce((acc, curr) => acc + (curr.totalMinutes || 0), 0)
-      : 0;
+    const totalStudyTime = summary.totalStudyTime ?? 0;
 
     return {
-      xp: summary.totalXP,
-      level: summary.level,
-      streakDays: summary.streak,
+      xp: summary.totalXP ?? 0,
+      level: summary.level ?? 1,
+      streakDays: summary.streak ?? 0,
       totalStudyTime,
-      masteryRadar: Array.isArray(subjects) 
-        ? subjects.map(s => ({
-            subject: s.subject || s.name,
-            score: s.percentage || 0
-          }))
-        : [],
-      averageSessionDuration: totalStudyTime / (Array.isArray(subjects) && subjects.length > 0 ? subjects.length : 1),
-      mostStudiedSubject: Array.isArray(subjects) && subjects.length > 0 
-        ? [...subjects].sort((a, b) => (b.totalMinutes || 0) - (a.totalMinutes || 0))[0]?.subject || 'Aucune'
-        : 'Aucune',
-      completionRate: 100 
+      masteryRadar: [],
+      averageSessionDuration: summary.averageSessionDuration ?? 0,
+      mostStudiedSubject: 'Aucune',
+      completionRate: summary.completionRate ?? 0
     };
   },
+  /** Non disponible : /api/stats non monté */
   getStatsBySubject: async () => {
-    const res = await api.get<{ success: boolean; data: any[] }>('/stats/subjects');
-    return res.data;
+    return [];
   },
+  /** Non disponible : /api/stats non monté */
   getHeatmapData: async () => {
-    const res = await api.get<{ success: boolean; data: any[] }>('/stats/heatmap');
-    return res.data;
+    return [];
   }
 };

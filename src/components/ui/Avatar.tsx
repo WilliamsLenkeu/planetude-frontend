@@ -1,4 +1,4 @@
-
+import { cn } from '../../utils/cn'
 
 interface AvatarProps {
   src?: string
@@ -12,7 +12,7 @@ export const Avatar = ({ src, alt, initials, size = 'md', className = '' }: Avat
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
-    lg: 'w-12 h-12 text-base'
+    lg: 'w-14 h-14 text-base'
   }
 
   if (src) {
@@ -20,7 +20,8 @@ export const Avatar = ({ src, alt, initials, size = 'md', className = '' }: Avat
       <img
         src={src}
         alt={alt || 'Avatar'}
-        className={`${sizeClasses[size]} rounded-full object-cover border-2 border-[var(--color-border-light)] ${className}`}
+        className={cn(sizeClasses[size], 'rounded-full object-cover border', className)}
+        style={{ borderColor: 'var(--color-border)' }}
       />
     )
   }
@@ -29,7 +30,16 @@ export const Avatar = ({ src, alt, initials, size = 'md', className = '' }: Avat
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full bg-[var(--color-bg-tertiary)] border-2 border-[var(--color-border-light)] flex items-center justify-center font-medium text-[var(--color-text-primary)] ${className}`}
+      className={cn(
+        sizeClasses[size],
+        'rounded-full flex items-center justify-center font-medium',
+        className
+      )}
+      style={{
+        backgroundColor: 'var(--color-bg-tertiary)',
+        border: '2px solid var(--color-border)',
+        color: 'var(--color-text)'
+      }}
     >
       {displayInitials}
     </div>

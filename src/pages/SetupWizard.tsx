@@ -6,43 +6,33 @@ import { Card } from '../components/ui/Card'
 import { subjectService } from '../services/subject.service'
 import { userService } from '../services/user.service'
 import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
+import { Plus, Trash2 } from 'lucide-react'
 
 export default function SetupWizard() {
   const navigate = useNavigate()
   const [matieres, setMatieres] = useState<string[]>([''])
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleAddMatiere = () => {
-    setMatieres([...matieres, ''])
-  }
-
-  const handleRemoveMatiere = (index: number) => {
-    const newMatieres = matieres.filter((_, i) => i !== index)
-    setMatieres(newMatieres)
-  }
-
+  const handleAddMatiere = () => setMatieres([...matieres, ''])
+  const handleRemoveMatiere = (index: number) => setMatieres(matieres.filter((_, i) => i !== index))
   const handleMatiereChange = (index: number, value: string) => {
-    const newMatieres = [...matieres]
-    newMatieres[index] = value
-    setMatieres(newMatieres)
+    const next = [...matieres]
+    next[index] = value
+    setMatieres(next)
   }
 
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
-      const validMatieres = matieres.filter(m => m.trim() !== '')
-      
+      const validMatieres = matieres.filter((m) => m.trim() !== '')
       for (const matiere of validMatieres) {
         await subjectService.create({
           name: matiere,
-          color: `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`
+          color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
         })
       }
-
-      await userService.updateProfile({
-        preferences: { matieres: validMatieres }
-      })
-
+      await userService.updateProfile({ preferences: { matieres: validMatieres } })
       localStorage.setItem('setupComplete', 'true')
       toast.success('Configuration terminée')
       navigate('/dashboard')
@@ -54,14 +44,14 @@ export default function SetupWizard() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-bg-secondary)]">
-      <div className="w-full max-w-lg animate-fade-in">
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
             Configuration
           </h1>
-          <p className="text-[var(--color-text-secondary)]">
-            Ajoutez vos matières
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>
+            Ajoutez vos matières pour commencer
           </p>
         </div>
 
@@ -76,47 +66,24 @@ export default function SetupWizard() {
                   className="flex-1"
                 />
                 {matieres.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleRemoveMatiere(index)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
+                  <Button variant="ghost" onClick={() => handleRemoveMatiere(index)} className="shrink-0">
+                    <Trash2 size={18} />
                   </Button>
                 )}
               </div>
             ))}
 
-            <Button
-              variant="secondary"
-              onClick={handleAddMatiere}
-              className="w-full"
-            >
-              + Ajouter une matière
+            <Button variant="secondary" onClick={handleAddMatiere} className="w-full">
+              <Plus size={18} />
+              Ajouter une matière
             </Button>
 
-            <Button
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              className="w-full"
-            >
+            <Button onClick={handleSubmit} isLoading={isLoading} className="w-full">
               Terminer
             </Button>
           </div>
         </Card>
-      </div>
+      </motion.div>
     </div>
   )
 }

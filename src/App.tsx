@@ -6,11 +6,10 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { MusicProvider } from './contexts/MusicContext'
 import Header from './components/Header'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LogOut } from 'lucide-react'
+import { LogOut, LayoutDashboard, Calendar, User } from 'lucide-react'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import EnvDebug from './components/EnvDebug'
 
-// Lazy Loading des pages pour optimiser le poids du bundle initial
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -18,7 +17,6 @@ const SetupWizard = lazy(() => import('./pages/SetupWizard'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Planning = lazy(() => import('./pages/Planning'))
 const PlanningDetail = lazy(() => import('./pages/PlanningDetail'))
-
 const Reminders = lazy(() => import('./pages/Reminders'))
 const Profile = lazy(() => import('./pages/Profile'))
 const LoFi = lazy(() => import('./pages/LoFi'))
@@ -49,91 +47,69 @@ function AppContent() {
   const handleLogout = () => {
     logout()
     navigate('/auth/login')
-    toast.success('Déconnexion réussie ! À bientôt ✨')
+    toast.success('À bientôt !')
   }
 
-  // Check if setup is completed
-  const isSetupComplete = () => {
-    const setupData = localStorage.getItem('setupComplete')
-    return setupData !== null
-  }
+  const isSetupComplete = () => localStorage.getItem('setupComplete') !== null
 
-  // Splash screen pendant l'initialisation
   if (isInitializing) {
-    return (
-      <LoadingSpinner fullScreen />
-    )
+    return <LoadingSpinner fullScreen />
   }
+
+  const mobileNavItems = [
+    { to: '/dashboard', label: 'Accueil', icon: LayoutDashboard },
+    { to: '/planning', label: 'Planning', icon: Calendar },
+    { to: '/profile', label: 'Profil', icon: User },
+  ]
 
   return (
-    <div className="flex flex-col min-h-screen relative font-main transition-colors duration-500" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }}>
-      {/* Background Decor - Ambiance Clean & Sophistiquée */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10" style={{ backgroundColor: 'var(--color-background)' }}>
-        {/* Soft Animated Gradients */}
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 45, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full blur-[140px] opacity-10 will-change-transform" 
+    <div
+      className="flex flex-col min-h-screen font-sans transition-colors duration-300"
+      style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }}
+    >
+      {/* Fond subtil */}
+      <div
+        className="fixed inset-0 overflow-hidden pointer-events-none -z-10"
+        style={{ backgroundColor: 'var(--color-background)' }}
+      >
+        <div
+          className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 rounded-full blur-[120px] opacity-[0.06]"
           style={{ backgroundColor: 'var(--color-primary)' }}
         />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, -30, 0],
-          }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] opacity-20 will-change-transform" 
+        <div
+          className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 rounded-full blur-[100px] opacity-[0.08]"
           style={{ backgroundColor: 'var(--color-secondary)' }}
         />
-        <motion.div 
-          animate={{ 
-            opacity: [0.1, 0.3, 0.1],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[10%] left-[5%] w-[50%] h-[50%] rounded-full blur-[110px] opacity-20 will-change-transform" 
-          style={{ backgroundColor: 'var(--color-primary)' }}
-        />
-
-        {/* Subtle Texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
       </div>
-      
+
       <EnvDebug />
-      <Toaster 
-        position="bottom-left" 
+      <Toaster
+        position="bottom-center"
         toastOptions={{
-          className: 'chic-card border-2 text-hello-black font-black uppercase tracking-[0.3em] text-[9px]',
-          style: { 
-            borderRadius: '1rem',
-            backgroundColor: 'var(--color-card-bg)',
-            borderColor: 'var(--color-border)',
-            color: 'var(--color-text)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: 'var(--shadow-chic)'
-          }
+          className: 'surface shadow-lg',
+          style: {
+            borderRadius: 'var(--radius-md)',
+            padding: '0.75rem 1rem',
+            fontSize: '0.875rem',
+          },
         }}
       />
-      
+
       <Header />
-      
-      <main className="flex-1 w-full relative overflow-hidden flex flex-col">
-        <div className="flex-1 container mx-auto px-2 py-4 md:px-4 md:py-8 overflow-y-auto custom-scrollbar">
+
+      <main className="flex-1 flex flex-col">
+        <div className={`flex-1 container mx-auto px-4 py-6 md:px-6 md:py-8 max-w-5xl overflow-y-auto ${isAuthenticated ? 'md:pb-24' : ''}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="h-full"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
             >
-              <Suspense fallback={<LoadingSpinner />}>
+              <Suspense fallback={<LoadingSpinner fullScreen />}>
                 <Routes location={location}>
                   {!isAuthenticated ? (
-                    // STACK NON-AUTHENTIFIÉ
                     <>
                       <Route path="/" element={<Home />} />
                       <Route path="/auth/login" element={<Login />} />
@@ -141,18 +117,15 @@ function AppContent() {
                       <Route path="*" element={<Navigate to="/auth/login" replace />} />
                     </>
                   ) : !isSetupComplete() ? (
-                    // SETUP WIZARD - Première connexion
                     <>
                       <Route path="/setup" element={<SetupWizard />} />
                       <Route path="*" element={<Navigate to="/setup" replace />} />
                     </>
                   ) : (
-                    // STACK AUTHENTIFIÉ
                     <>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/planning" element={<Planning />} />
                       <Route path="/planning/:id" element={<PlanningDetail />} />
-
                       <Route path="/reminders" element={<Reminders />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/lofi" element={<LoFi />} />
@@ -168,7 +141,6 @@ function AppContent() {
           </AnimatePresence>
         </div>
 
-        {/* Mini Player global - Uniquement sur PC */}
         {isAuthenticated && (
           <Suspense fallback={null}>
             <MiniPlayer />
@@ -176,67 +148,76 @@ function AppContent() {
         )}
       </main>
 
-      {/* Logout button (Desktop) */}
       {isAuthenticated && (
-        <motion.button 
-          whileHover={{ scale: 1.1 }}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleLogout}
-          className="fixed bottom-4 left-4 z-50 p-2 backdrop-blur-md border-2 rounded-full shadow-lg hidden md:flex items-center gap-2 group transition-all duration-500"
-          style={{ 
+          className="fixed bottom-20 left-4 z-50 p-2.5 rounded-full shadow-lg hidden md:flex items-center gap-2 group"
+          style={{
             backgroundColor: 'var(--color-card-bg)',
-            borderColor: 'var(--color-border)',
-            color: 'var(--color-primary)'
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-muted)',
           }}
         >
-          <LogOut size={16} />
-          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold text-[10px] whitespace-nowrap">
+          <LogOut size={18} />
+          <span className="max-w-0 overflow-hidden group-hover:max-w-[80px] transition-all duration-300 text-xs font-medium whitespace-nowrap">
             Déconnexion
           </span>
         </motion.button>
       )}
 
-      {/* Mobile Nav */}
       {isAuthenticated && (
-        <nav 
-          className="md:hidden h-11 backdrop-blur-lg border-t flex items-center justify-around px-2 pb-safe transition-all duration-500"
-          style={{ 
-            backgroundColor: 'var(--color-card-bg)',
-            borderColor: 'var(--color-border)'
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-14 border-t pb-safe"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-card-bg) 98%, transparent)',
+            backdropFilter: 'blur(12px)',
+            borderColor: 'var(--color-border)',
           }}
         >
-          <MobileNavItem to="/dashboard" label="Accueil" />
-          <MobileNavItem to="/planning" label="Plan" />
-          <MobileNavItem to="/profile" label="Profil" />
+          {mobileNavItems.map(({ to, label, icon: Icon }) => (
+            <MobileNavItem key={to} to={to} label={label} icon={Icon} />
+          ))}
         </nav>
       )}
+
+      {/* Padding bottom pour mobile nav */}
+      {isAuthenticated && <div className="md:hidden h-14" />}
     </div>
   )
 }
 
-const MobileNavItem = ({ to, label }: { to: string, label: string }) => (
-  <NavLink
-    to={to}
-    className={() =>
-      `flex flex-col items-center justify-center transition-all relative py-0.5 px-2 rounded-lg`
-    }
-    style={({ isActive }) => ({
-      color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
-      opacity: isActive ? 1 : 0.6
-    })}
-  >
-    {({ isActive }) => (
-      <>
-        <span className={`text-[10px] font-medium uppercase tracking-wider mt-0.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
-          {label}
-        </span>
-        {isActive && (
-          <motion.div
-            layoutId="mobile-nav-dot"
-            className="absolute -bottom-1 w-4 h-0.5 rounded-full"
-            style={{ backgroundColor: 'var(--color-accent)' }}
-          />
-        )}
-      </>
-    )}
-  </NavLink>
-)
+function MobileNavItem({
+  to,
+  label,
+  icon: Icon,
+}: {
+  to: string
+  label: string
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>
+}) {
+  return (
+    <NavLink
+      to={to}
+      className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-lg transition-colors min-w-[64px]"
+      style={({ isActive }) => ({
+        color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <motion.div
+              layoutId="mobile-nav-indicator"
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            />
+          )}
+          <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+          <span className="text-[10px] font-medium">{label}</span>
+        </>
+      )}
+    </NavLink>
+  )
+}

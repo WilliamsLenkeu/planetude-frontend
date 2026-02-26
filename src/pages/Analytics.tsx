@@ -1,23 +1,22 @@
 import { Card } from '../components/ui/Card'
+import { PageHeader } from '../components/PageHeader'
+import { BarChart3 } from 'lucide-react'
 
 export default function Analytics() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-          Analytics
-        </h1>
-        <p className="text-[var(--color-text-secondary)]">
-          Analyses détaillées
-        </p>
-      </div>
+      <PageHeader
+        title="Statistiques"
+        description="Suivez votre progression"
+      />
 
       <Card>
-        <h2 className="font-semibold text-[var(--color-text-primary)] mb-4">
-          Vue d'ensemble
+        <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+          <BarChart3 size={20} />
+          Analytics
         </h2>
-        <div className="text-center py-8 text-[var(--color-text-secondary)]">
-          <p className="text-sm">Fonctionnalité en développement</p>
+        <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-sm">Aucune donnée pour le moment</p>
         </div>
       </Card>
     </div>

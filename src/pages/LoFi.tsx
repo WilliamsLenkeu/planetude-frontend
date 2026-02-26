@@ -1,25 +1,24 @@
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
+import { PageHeader } from '../components/PageHeader'
+import { Music } from 'lucide-react'
 
 export default function LoFi() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-          Lo-Fi
-        </h1>
-        <p className="text-[var(--color-text-secondary)]">
-          Musique d'ambiance pour étudier
-        </p>
-      </div>
+      <PageHeader
+        title="Lo-Fi"
+        description="Musique d'ambiance pour étudier"
+      />
 
       <Card>
-        <h2 className="font-semibold text-[var(--color-text-primary)] mb-4">
+        <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+          <Music size={20} />
           Player
         </h2>
-        <div className="text-center py-8 text-[var(--color-text-secondary)]">
+        <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
           <p className="text-sm mb-4">Fonctionnalité en développement</p>
-          <Button>Actualiser</Button>
+          <Button variant="secondary">Actualiser</Button>
         </div>
       </Card>
     </div>

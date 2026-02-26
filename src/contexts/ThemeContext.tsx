@@ -24,8 +24,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const applyTheme = (colors: ThemeColors) => {
     const root = document.documentElement;
-    
-    // Base variables for index.css
+
+    // Variables sémantiques principales
     root.style.setProperty('--color-primary', colors.primary);
     root.style.setProperty('--color-primary-rgb', hexToRgb(colors.primary));
     root.style.setProperty('--color-background', colors.background);
@@ -33,16 +33,19 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.style.setProperty('--color-text', colors.text);
     root.style.setProperty('--color-card-bg', colors.card);
     root.style.setProperty('--color-border', colors.border);
-    
-    // Compatibility with old variables
+
+    // Dérivés pour cohérence
+    root.style.setProperty('--color-accent', colors.primary);
+    root.style.setProperty('--color-text-muted', `${colors.text}99`);
+
+    // Legacy
     root.style.setProperty('--color-pink-candy', colors.primary);
     root.style.setProperty('--color-pink-deep', colors.primary);
     root.style.setProperty('--color-pink-milk', colors.secondary);
     root.style.setProperty('--color-clean-beige', colors.background);
     root.style.setProperty('--color-hello-black', colors.text);
-    root.style.setProperty('--color-pink-candy-shadow', `${colors.primary}26`); // 15% opacity
-    
-    // Force light color-scheme
+    root.style.setProperty('--color-pink-candy-shadow', `${colors.primary}26`);
+
     root.style.setProperty('color-scheme', 'light');
     root.classList.remove('dark');
   };

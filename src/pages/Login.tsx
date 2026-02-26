@@ -5,6 +5,7 @@ import { authService } from '../services/auth.service'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -19,7 +20,6 @@ export default function Login() {
       toast.error('Veuillez remplir tous les champs')
       return
     }
-
     setIsLoading(true)
     try {
       const response = await authService.login({ email, password })
@@ -34,14 +34,18 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-bg-secondary)]">
-      <div className="w-full max-w-md animate-fade-in">
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-sm"
+      >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
             Connexion
           </h1>
-          <p className="text-[var(--color-text-secondary)]">
-            Connectez-vous à votre espace
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>
+            Accédez à votre espace d'étude
           </p>
         </div>
 
@@ -49,12 +53,11 @@ export default function Login() {
           <Input
             type="email"
             label="Email"
-            placeholder="votre@email.com"
+            placeholder="vous@exemple.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-
           <Input
             type="password"
             label="Mot de passe"
@@ -63,26 +66,22 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-
-          <Button
-            type="submit"
-            isLoading={isLoading}
-            className="w-full"
-          >
+          <Button type="submit" isLoading={isLoading} className="w-full">
             Se connecter
           </Button>
         </form>
 
-        <p className="text-center mt-6 text-sm text-[var(--color-text-secondary)]">
-          Pas encore de compte ?{' '}
+        <p className="text-center mt-6 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          Pas de compte ?{' '}
           <Link
             to="/auth/register"
-            className="text-[var(--color-text-primary)] font-medium hover:underline"
+            className="font-medium hover:underline"
+            style={{ color: 'var(--color-primary)' }}
           >
             S'inscrire
           </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   )
 }

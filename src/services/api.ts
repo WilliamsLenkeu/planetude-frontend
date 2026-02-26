@@ -92,13 +92,16 @@ class ApiService {
           const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken })
+            body: JSON.stringify({ token: refreshToken })
           });
 
           if (refreshRes.ok) {
             const refreshData = await refreshRes.json();
-            const token = refreshData.token || refreshData.accessToken;
-            localStorage.setItem('token', token);
+            const payload = refreshData.data ?? refreshData;
+            const token = payload.token ?? refreshData.token ?? refreshData.accessToken;
+            const newRefreshToken = payload.refreshToken ?? refreshData.refreshToken;
+            if (token) localStorage.setItem('token', token);
+            if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
 
             requestOptions.headers = {
               ...requestOptions.headers,

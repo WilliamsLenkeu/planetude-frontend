@@ -3,12 +3,15 @@ import type { User } from '../types/index';
 
 export const userService = {
   getProfile: async () => {
-    return api.get<User>('/users/profile');
+    const res = await api.get<any>('/auth/profile');
+    return (res?.data ?? res) as User;
   },
-  updateProfile: async (data: Partial<User>) => {
-    return api.put<User>('/users/profile', data);
+  updateProfile: async (data: { name?: string; preferences?: Record<string, unknown> }) => {
+    const res = await api.put<any>('/auth/profile', data);
+    return (res?.data ?? res) as User;
   },
-  changePassword: async (data: any) => {
-    return api.put<{ success: boolean; message: string }>('/users/change-password', data);
+  /** Non disponible dans l'API modulaire actuelle */
+  changePassword: async (_data: { currentPassword: string; newPassword: string }) => {
+    throw new Error('Changement de mot de passe non implémenté côté API');
   }
 };

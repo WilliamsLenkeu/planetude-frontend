@@ -6,7 +6,9 @@ export const lofiService = {
     return api.get<LoFiTrack[]>('/lofi');
   },
   getByCategory: async (category: string) => {
-    return api.get<LoFiTrack[]>(`/lofi/category/${category}`);
+    const res = await api.get<any>('/lofi', { params: { category } });
+    const data = res?.data ?? res;
+    return Array.isArray(data) ? data : [];
   },
   addTrack: async (trackData: Partial<LoFiTrack>) => {
     return api.post<{ success: boolean; message: string }>('/lofi', trackData);

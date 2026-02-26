@@ -5,9 +5,9 @@ export const planningService = {
   getAll: async (params?: { page?: number; limit?: number; periode?: string }): Promise<Planning[]> => {
     const response = await api.get<any>('/planning', { params });
     
-    // Spec: { success: true, plannings: [ ... ], pagination: { ... } }
-    if (response && response.success && Array.isArray(response.plannings)) {
-      return response.plannings.map((p: any) => ({
+    // Spec: { success: true, data: [ ... ], pagination: { ... } }
+    if (response && response.success && Array.isArray(response.data)) {
+      return response.data.map((p: any) => ({
         ...p,
         _id: p._id || p.id
       }));
@@ -88,8 +88,7 @@ export const planningService = {
   },
 
   updateSession: async (planningId: string, sessionId: string, data: { statut: string; notes?: string }) => {
-    // Spec: PATCH /api/planning/:id/sessions/:sessionId
-    return api.patch(`/planning/${planningId}/sessions/${sessionId}`, data);
+    return api.put(`/planning/${planningId}/sessions/${sessionId}`, data);
   },
 
   delete: async (id: string) => {
@@ -97,10 +96,11 @@ export const planningService = {
   },
 
   exportICal: async (id: string) => {
-    return api.getBlob(`/planning/${id}/export/ical`);
+    return api.getBlob(`/planning/${id}/export.ical`);
   },
 
-  exportPDF: async (id: string) => {
-    return api.getBlob(`/planning/${id}/export/pdf`);
+  /** Export PDF non disponible dans l'API actuelle */
+  exportPDF: async (_id: string) => {
+    throw new Error('Export PDF non implémenté côté API');
   }
 };
