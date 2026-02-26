@@ -29,14 +29,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading && (
-          <span
-            className="inline-block shrink-0 rounded-full border-2 border-[var(--color-border-light)] animate-spin"
-            style={{
-              width: 18,
-              height: 18,
-              borderTopColor: 'currentColor',
-            }}
-          />
+          <span className="inline-flex items-end justify-center gap-0.5 shrink-0 h-4">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="loader-wavy-bar-sm"
+                style={{
+                  height: 14,
+                  background: 'currentColor',
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+          </span>
         )}
         {children}
       </button>

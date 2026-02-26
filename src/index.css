@@ -255,3 +255,27 @@
 .animate-slide-in {
   animation: slideIn 0.35s ease-out;
 }
+
+/* Material 3 Expressive — lignes ondulées animées */
+@keyframes wavy-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+.loader-wavy-bar {
+  width: 4px;
+  min-height: 8px;
+  border-radius: 2px;
+  background: var(--color-primary, var(--color-accent));
+  transform-origin: center bottom;
+  animation: wavy-bar 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Version compacte pour les boutons */
+.loader-wavy-bar-sm {
+  width: 3px;
+  min-height: 4px;
+  border-radius: 1.5px;
+  transform-origin: center bottom;
+  animation: wavy-bar 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

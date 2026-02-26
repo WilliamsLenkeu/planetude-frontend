@@ -6,7 +6,8 @@ interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-const SIZES = { sm: 20, md: 32, lg: 48 }
+const SIZES = { sm: 24, md: 36, lg: 52 }
+const BAR_COUNT = 5
 
 export const LoadingSpinner = ({
   fullScreen = false,
@@ -14,17 +15,24 @@ export const LoadingSpinner = ({
   size: sizeProp,
 }: LoadingSpinnerProps) => {
   const size = sizeProp ?? (fullScreen ? 'lg' : 'md')
-  const px = SIZES[size]
+  const height = SIZES[size]
 
   const spinner = (
     <div
-      className="rounded-full border-2 border-[var(--color-border-light)] animate-spin"
-      style={{
-        width: px,
-        height: px,
-        borderTopColor: 'var(--color-primary, var(--color-accent))',
-      }}
-    />
+      className="flex items-end justify-center gap-1"
+      style={{ height }}
+    >
+      {Array.from({ length: BAR_COUNT }, (_, i) => (
+        <span
+          key={i}
+          className="loader-wavy-bar"
+          style={{
+            height: height * 0.6,
+            animationDelay: `${i * 0.12}s`,
+          }}
+        />
+      ))}
+    </div>
   )
 
   if (fullScreen) {
